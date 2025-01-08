@@ -43,7 +43,7 @@ export const MisVehiculoScreen = () => {
   const fetchHeavyVehicles = async () => {
     try {
       const response = await fetch(
-        "http://192.168.1.12:5001/api/get_heavy_vehicles"
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/vehicles/api/get_heavy_vehicles"
       );
       const data: Vehicle[] = await response.json();
       setVehicles(data);
@@ -90,7 +90,7 @@ export const MisVehiculoScreen = () => {
           size={19}
           color="#004270"
           style={styles.iconStyle}
-          onPress={() => navigation.navigate("HomeTab", { screen: "" })}
+          onPress={() => navigation.navigate("HomeTab", { screen: "Home" })}
         />
         <Text style={styles.title}>Vehículos</Text>
       </View>

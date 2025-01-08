@@ -35,7 +35,7 @@ export const LoginScreen = ({ navigation }: Props) => {
 
     try {
       const response = await axios.post(
-        "http://192.168.1.12:5000/api/authentication",
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/users/api/authentication",
         { email, password },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -107,18 +107,19 @@ export const LoginScreen = ({ navigation }: Props) => {
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
               <Text style={styles.buttonText}>Iniciar Sesion</Text>
             </TouchableOpacity>
-            <TouchableOpacity
+
+{/*             <TouchableOpacity
               style={{ marginTop: 10, backgroundColor: "#004270" }}
               onPress={() => navigation.navigate("HomeStack")}
             >
               <Text style={styles.buttonText}>IngresoPrueba</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
-          <View style={styles.additionalTextContainer}>
+{/*           <View style={styles.additionalTextContainer}>
             <Text style={styles.rememberText}>¿No tienes una cuenta aún?</Text>
             <Text style={styles.forgotPasswordText}>Registrarse</Text>
-          </View>
+          </View> */}
         </ScrollView>
       </View>
     </GestureHandlerRootView>

@@ -53,7 +53,7 @@ export const RegistrarTallerScreen = () => {
 
     try {
       const response = await fetch(
-        "http://192.168.1.12:5002/api/register_repairshop",
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/repairshops/api/register_repairshop",
         {
           method: "POST",
           headers: {
@@ -97,6 +97,7 @@ export const RegistrarTallerScreen = () => {
               size={19}
               color="#004270"
               style={styles.iconStyle}
+              onPress={() => navigation.navigate("HomeTab", { screen: "Home" })}
             />
             <Text style={styles.title}>Registro de Taller</Text>
           </View>

@@ -27,7 +27,7 @@ export const RegistrarVehiculoScreen = () => {
   const [year, setYear] = useState("");
   const [mileage, setMileage] = useState("");
   const [model, setModel] = useState("");
-  const [fuelType, setFuelType] = useState("");
+  const [fuel_type, setFuelType] = useState("");
   const [oil, setOil] = useState("");
 
   const handleLightChange = (value: boolean) => {
@@ -47,7 +47,7 @@ export const RegistrarVehiculoScreen = () => {
       !year ||
       !mileage ||
       !model ||
-      !fuelType ||
+      !fuel_type ||
       !oil ||
       (!light && !heavy)
     ) {
@@ -61,14 +61,14 @@ export const RegistrarVehiculoScreen = () => {
       year,
       mileage,
       model,
-      fuelType: fuelType,
+      fuel_type: fuel_type,
       oil,
       type: light ? "Liviano" : "Pesado",
     };
 
     try {
       const response = await fetch(
-        "http://192.168.1.12:5001/api/register_vehicle",
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/vehicles/api/register_vehicle",
         {
           method: "POST",
           headers: {
@@ -82,7 +82,7 @@ export const RegistrarVehiculoScreen = () => {
       if (response.ok) {
         alert(data.message);
 
-        navigation.navigate("Vehiculos", { screen: "" });
+        navigation.navigate("Vehiculos", { screen: "VehiculosLivianos" });
 
         resetFields();
       } else {
@@ -116,7 +116,7 @@ export const RegistrarVehiculoScreen = () => {
               size={19}
               color="#004270"
               style={styles.iconStyle}
-              onPress={() => navigation.navigate("HomeTab", { screen: "" })}
+              onPress={() => navigation.navigate("HomeTab", { screen: "Home" })}
             />
             <Text style={styles.title}>Registro de Vehículo</Text>
           </View>
@@ -184,7 +184,7 @@ export const RegistrarVehiculoScreen = () => {
               <TextInput
                 style={styles.input}
                 placeholder="Ingrese tipo gasolina"
-                value={fuelType}
+                value={fuel_type}
                 onChangeText={setFuelType}
               />
             </View>

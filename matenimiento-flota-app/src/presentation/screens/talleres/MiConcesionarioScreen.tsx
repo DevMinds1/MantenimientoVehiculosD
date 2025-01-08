@@ -43,7 +43,7 @@ export const MiConsecionarioScreen = () => {
   const fetchDealership = async () => {
     try {
       const response = await fetch(
-        "http://192.168.1.12:5002/api/get_dealership_repairshops"
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/repairshops/api/get_dealership_repairshops"
       );
       const data: Repairshop[] = await response.json();
       setRepairshops(data);

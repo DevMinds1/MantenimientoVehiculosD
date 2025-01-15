@@ -14,6 +14,7 @@ import { TopTabsVehiculoNavigator } from "./TopTabsVehiculoNavigator";
 export type RootButtonParams = {
   HomeTab: { screen: string };
   Vehiculos: { screen: string };
+  Mantenimientos: undefined;
 };
 
 const Tab = createBottomTabNavigator();

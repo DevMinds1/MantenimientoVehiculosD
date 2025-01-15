@@ -3,6 +3,7 @@ import { MisVehiculoScreen } from "../screens/vehiculos/MisVehiculosPesadosScree
 import { MisVehiculosLivianosScreen } from "../screens/vehiculos/MisVehiculosLivianosScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { VerMantenimientoPendienteScreen } from "../screens/mantenimientos/VerMantenimientoPendienteScreen";
+import { VerMantenimientoCompletadoScreen } from "../screens/mantenimientos/VerMantenimientoCompletadoScreen";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -14,7 +15,7 @@ export const TopTabsVehiculoNavigator = () => {
         name="Pendientes"
         component={VerMantenimientoPendienteScreen}
       />
-      <Tab.Screen name="Completados" component={VerMantenimientoPendienteScreen} />
+      <Tab.Screen name="Completados" component={VerMantenimientoCompletadoScreen} />
     </Tab.Navigator>
   );
 };

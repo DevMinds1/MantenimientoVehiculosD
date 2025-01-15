@@ -24,14 +24,26 @@ export const LoginScreen = ({ navigation }: Props) => {
   const [isRemembered, setIsRemembered] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState({ email: "", password: "" }); // Estado para errores separados
+  const [isError, setIsError] = useState({ email: false, password: false });
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      console.error("Por favor, ingresa un correo y una contraseña.");
+    // Validar campos antes de enviar la petición
+    const emailError = !email.trim() ? "Por favor, ingresa un correo." : "";
+    const passwordError = !password.trim()
+      ? "Por favor, ingresa una contraseña."
+      : "";
+
+    if (emailError || passwordError) {
+      setError({ email: emailError, password: passwordError });
+      setIsError({ email: !!emailError, password: !!passwordError });
       return;
     }
 
-    console.log("Email:", email, "Password:", password);
+    setError({ email: "", password: "" });
+    setIsError({ email: false, password: false });
+
+    /*  console.log("Email:", email, "Password:", password); */
 
     try {
       const response = await axios.post(
@@ -41,11 +53,26 @@ export const LoginScreen = ({ navigation }: Props) => {
       );
 
       navigation.navigate("HomeStack");
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(error.message);
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          setError({
+            email: "Usuario o contraseña incorrectos.",
+            password: "Usuario o contraseña incorrectos.",
+          });
+          setIsError({ email: true, password: true });
+        } else {
+          const generalError =
+            err.response?.data?.message || "Ocurrió un error inesperado.";
+          setError({ email: generalError, password: generalError });
+        }
+      } else if (err instanceof Error) {
+        setError({ email: err.message, password: err.message });
       } else {
-        console.error("Ocurrió un error desconocido:", error);
+        setError({
+          email: "Error desconocido.",
+          password: "Error desconocido.",
+        });
       }
     }
   };
@@ -58,7 +85,6 @@ export const LoginScreen = ({ navigation }: Props) => {
             <Text style={styles.title}>Login</Text>
             <View style={styles.containerTitle}>
               <Text style={styles.subtitle}>UTPL</Text>
-
               <AntDesign
                 name="car"
                 size={32}
@@ -72,18 +98,26 @@ export const LoginScreen = ({ navigation }: Props) => {
             <Text style={styles.rememberText}>Correo</Text>
             <TextInput
               placeholder="JhonDoe@dominio.com"
-              style={styles.input}
+              style={[styles.input, isError.email && styles.inputError]}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
             />
+            {isError.email && (
+              <Text style={styles.errorText}>{error.email}</Text>
+            )}
+
+            <Text style={styles.rememberText}>Contraseña</Text>
             <TextInput
               placeholder="*****"
-              style={styles.input}
+              style={[styles.input, isError.password && styles.inputError]}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={true}
             />
+            {isError.password && (
+              <Text style={styles.errorText}>{error.password}</Text>
+            )}
           </View>
 
           <View style={styles.rememberContainer}>
@@ -93,33 +127,21 @@ export const LoginScreen = ({ navigation }: Props) => {
                 onValueChange={setIsRemembered}
                 style={styles.checkbox}
               />
-              <Text style={styles.rememberText}>Recuerdame</Text>
+              <Text style={styles.rememberText}>Recuérdame</Text>
             </View>
 
             <TouchableOpacity style={styles.forgotPasswordContainer}>
               <Text style={styles.forgotPasswordText}>
-                ¿ Olvidaste tu contraseña ?
+                ¿Olvidaste tu contraseña?
               </Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
-              <Text style={styles.buttonText}>Iniciar Sesion</Text>
+              <Text style={styles.buttonText}>Iniciar Sesión</Text>
             </TouchableOpacity>
-
-{/*             <TouchableOpacity
-              style={{ marginTop: 10, backgroundColor: "#004270" }}
-              onPress={() => navigation.navigate("HomeStack")}
-            >
-              <Text style={styles.buttonText}>IngresoPrueba</Text>
-            </TouchableOpacity> */}
           </View>
-
-{/*           <View style={styles.additionalTextContainer}>
-            <Text style={styles.rememberText}>¿No tienes una cuenta aún?</Text>
-            <Text style={styles.forgotPasswordText}>Registrarse</Text>
-          </View> */}
         </ScrollView>
       </View>
     </GestureHandlerRootView>
@@ -227,5 +249,12 @@ const styles = StyleSheet.create({
   iconStyle: {
     marginLeft: 10,
     marginRight: 10,
+  },
+  inputError: {
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
   },
 });

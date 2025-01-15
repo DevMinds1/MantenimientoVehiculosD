@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
 
   inputRow: {
-    width: "47.1%",
+    width: "47%",
     marginBottom: 12,
     marginRight: 10,
   },

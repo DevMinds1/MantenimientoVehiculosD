@@ -97,12 +97,6 @@ export const MiConsecionarioScreen = () => {
 
 
       <View style={styles.buscar}>
-        {/*       <Ionicons
-              name="search-outline"
-              size={18}
-              color="#004270"
-              style={styles.iconStyle}
-            /> */}
         <TextInput
           placeholder="Buscar..."
           style={styles.input}
@@ -346,7 +340,6 @@ const styles = StyleSheet.create({
   },
   buscar: {
     flexDirection: "row",
-
     marginTop: 12,
     marginBottom: 12,
     width: "100%",

@@ -24,6 +24,8 @@ import { MiMecanicaScreen } from "../screens/talleres/MiMecanicaScreen";
 import { MiConsecionarioScreen } from "../screens/talleres/MiConcesionarioScreen";
 import { VerMantenimientoPendienteScreen } from "../screens/mantenimientos/VerMantenimientoPendienteScreen";
 import { VerMantenimientoCompletadoScreen } from "../screens/mantenimientos/VerMantenimientoCompletadoScreen";
+import { MantenimientoCorrectivoScreen } from "../screens/mantenimientos/MantenimientoCorrectivoScreen";
+import { MantenimientoPreventivoScreen } from "../screens/mantenimientos/MantenimientoPreventivoScreen";
 
 const Drawer = createDrawerNavigator();
 
@@ -57,6 +59,8 @@ export const SideMenuNavigator = () => {
       <Drawer.Screen name="MiMecanicaScreen" component={MiMecanicaScreen} />
       <Drawer.Screen name="MiConsecionarioScreen" component={MiConsecionarioScreen} />
       <Drawer.Screen name="Talleres" component={RegistrarTallerScreen} />
+      <Drawer.Screen name="MantenimientosCorrectivos" component={MantenimientoCorrectivoScreen} />
+      <Drawer.Screen name="MantenimientosPreventivos" component={MantenimientoPreventivoScreen} />
       <Drawer.Screen name="MantenimientosPendientes" component={VerMantenimientoPendienteScreen} />
       <Drawer.Screen name="MantenimientosCompletados" component={VerMantenimientoCompletadoScreen} />
       <Drawer.Screen name="Perfil" component={PerfilScreen} />
@@ -224,13 +228,13 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
             label="Preventivo"
             style={{ marginLeft: "15%" }}
             icon={() => <Ionicons name="ellipse" size={7} color="#A0A0A0" />}
-            onPress={() => closeDrawerAndNavigate("Tab", "Mantenimientos")}
+            onPress={() => closeDrawerAndNavigateUno("MantenimientosPreventivos")}
           />
           <DrawerItem
             label="Correctivo"
             style={{ marginLeft: "15%" }}
             icon={() => <Ionicons name="ellipse" size={7} color="#A0A0A0" />}
-            onPress={() => closeDrawerAndNavigate("Tab", "Mantenimientos")}
+            onPress={() => closeDrawerAndNavigateUno("MantenimientosCorrectivos")}
           />
         </>
       )}

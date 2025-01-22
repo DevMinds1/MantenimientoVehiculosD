@@ -9,13 +9,18 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
-import { useFocusEffect } from "@react-navigation/native";
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from "@react-navigation/native";
+import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
 
 interface Order {
   vehicle: string;
   repairshop: string;
   mandated: string;
-  faults: string;
+  faults: string[]
   state: string;
   comments: string;
   type: string;
@@ -24,6 +29,7 @@ interface Order {
 
 export const VerMantenimientoPendienteScreen = () => {
   const { top } = useSafeAreaInsets();
+  const navigation = useNavigation<NavigationProp<RootButtonParams>>();
 
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +40,7 @@ export const VerMantenimientoPendienteScreen = () => {
         "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_pending_orders"
       );
       const data = await response.json();
+      console.log("Ordenes pendientes:", data);
       setPendingOrders(data);
       setLoading(false);
     } catch (error) {
@@ -82,8 +89,18 @@ export const VerMantenimientoPendienteScreen = () => {
               </Text>
               <Text style={styles.label}>Valor Cancelado:</Text>
               <View style={styles.buttonCont}>
-                <TouchableOpacity style={styles.statusButton}>
+               
+                <TouchableOpacity
+                  style={styles.statusButton}
+                  onPress={() =>
+                    navigation.navigate("HomeTab", {
+                      screen: "DetalleMantenimeinto",
+                      params: { id: item.id , faults: item.faults },
+                    })
+                  }
+                >
                   <Text style={styles.statusText}>Aceptado</Text>
+
                 </TouchableOpacity>
               </View>
             </View>
@@ -104,7 +121,7 @@ export const VerMantenimientoPendienteScreen = () => {
           <Text style={styles.text}>Vehículo en camino</Text>
         </View>
         <View style={styles.statusItem}>
-          <View style={[styles.circle, { backgroundColor: "#EEFF56B8" }]} />
+          <View style={[styles.circle, { backgroundColor: "#FFD85659" }]} />
           <Text style={styles.text}>Vehículo en taller</Text>
         </View>
       </View>

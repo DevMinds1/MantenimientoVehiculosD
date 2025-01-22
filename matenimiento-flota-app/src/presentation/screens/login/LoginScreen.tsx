@@ -43,14 +43,15 @@ export const LoginScreen = ({ navigation }: Props) => {
     setError({ email: "", password: "" });
     setIsError({ email: false, password: false });
 
-    /*  console.log("Email:", email, "Password:", password); */
-
     try {
       const response = await axios.post(
         "https://us-central1-global-tine-447000-u6.cloudfunctions.net/users/api/authentication",
         { email, password },
         { headers: { "Content-Type": "application/json" } }
       );
+
+      // Aquí imprimimos los datos de la respuesta
+      console.log("Datos del usuario:", response.data);
 
       navigation.navigate("HomeStack");
     } catch (err) {
@@ -142,6 +143,15 @@ export const LoginScreen = ({ navigation }: Props) => {
               <Text style={styles.buttonText}>Iniciar Sesión</Text>
             </TouchableOpacity>
           </View>
+
+       {/*    <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => navigation.navigate("HomeStack")}
+            >
+              <Text>Pruebas</Text>
+            </TouchableOpacity>
+          </View> */}
         </ScrollView>
       </View>
     </GestureHandlerRootView>

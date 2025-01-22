@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ScrollView,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { globalStyles } from "../../theme/theme";
@@ -15,6 +16,11 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Checkbox from "expo-checkbox";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
+import Feather from "@expo/vector-icons/Feather";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export const RegistrarTallerScreen = () => {
   const { top } = useSafeAreaInsets();
@@ -26,6 +32,7 @@ export const RegistrarTallerScreen = () => {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
+  const [imagen, setimagen] = useState("");
 
   const handleMechanicChange = (value: boolean) => {
     setMechanic(value);
@@ -37,44 +44,158 @@ export const RegistrarTallerScreen = () => {
     if (value) setMechanic(false);
   };
 
+  //BottomSheet
+  const sheetRef = useRef<BottomSheet>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const snapPoints = ["20%"];
+
+  const openSheet = () => {
+    sheetRef.current?.snapToIndex(0);
+  };
+
+  const closeSheet = () => {
+    sheetRef.current?.close();
+  };
+
+  const handleOverlayPress = () => {
+    if (isOpen) closeSheet();
+  };
+
+  const handleSheetChange = (index: number) => {
+    setIsOpen(index !== -1);
+  };
+
+  //Camara-------------------------------------------------------------
+  //Galeria
+  const changeImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+    if (!result.canceled) {
+      setimagen(result.assets[0].uri);
+      setIsOpen(false);
+      closeSheet();
+    } else {
+      console.log("Image selection was canceled");
+    }
+  };
+
+  //Camara
+  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const cameraRef = useRef<CameraView | null>(null);
+
+  const checkPermissions = useCallback(async () => {
+    if (!permission) {
+      await requestPermission();
+    }
+  }, [permission, requestPermission]);
+
+  const handleSnapPress = useCallback(async () => {
+    const { granted } = await requestPermission();
+    if (!granted) {
+      alert("Se requieren permisos para acceder a la cámara.");
+      return;
+    }
+    sheetRef.current?.snapToIndex(0);
+    setIsOpen(true);
+  }, [requestPermission]);
+
+  const cancelCamera = () => {
+    setCameraOpen(false);
+    setIsOpen(false);
+    closeSheet(); // Cierra la cámara
+  };
+
+  const openCamera = () => {
+    setCameraOpen(true);
+    setIsOpen(false);
+  };
+
+  const takePicture = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync();
+        if (photo) {
+          setimagen(photo.uri);
+          setCameraOpen(false);
+          closeSheet();
+        } else {
+          console.log("No photo captured");
+        }
+      } catch (error) {
+        console.error("Error capturing photo:", error);
+      }
+    }
+  };
+
+  //---------------------------------------
+
   const handleSubmit = async () => {
-    if (!name || !address || !phone || !city || (!mechanic && !dealership)) {
+    if (
+      !name ||
+      !address ||
+      !phone ||
+      !city ||
+      (!mechanic && !dealership) ||
+      !imagen
+    ) {
       alert("Por favor, complete todos los campos, son obligatorios.");
       return;
     }
-
-    const TallerData = {
-      name,
-      address,
-      phone,
-      city,
-      type: mechanic ? "Mecánica" : "Concesionario",
-    };
-
+  
+    const extension = imagen.split('.').pop()?.toLowerCase();
+    let mimeType = "image/jpeg";
+  
+    if (extension === "png") {
+      mimeType = "image/png";
+    } else if (extension === "jpg" || extension === "jpeg") {
+      mimeType = "image/jpeg";
+    } else {
+      alert("Formato de imagen no soportado. Solo se permiten archivos JPG o PNG.");
+      return;
+    }
+  
+    const formData = new FormData();
+  
+    formData.append("image", {
+      uri: imagen,
+      type: mimeType,
+      name: imagen.substring(imagen.lastIndexOf('/') + 1),
+    } as any);
+  
+    formData.append("name", name);
+    formData.append("address", address);
+    formData.append("phone", phone);
+    formData.append("city", city);
+    formData.append("type", mechanic ? "Mecánica" : "Concesionario");
+  
     try {
       const response = await fetch(
         "https://us-central1-global-tine-447000-u6.cloudfunctions.net/repairshops/api/register_repairshop",
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
-          body: JSON.stringify(TallerData),
+          body: formData,
         }
       );
-
+  
       const data = await response.json();
       if (response.ok) {
         alert(data.message);
-
+  
         navigation.navigate("HomeTab", { screen: "MiMecanicaScreen" });
-
+  
         resetFields();
       } else {
         alert("Error: " + data.message);
       }
     } catch (error) {
-      console.error("Error al registrar el vehículo:", error);
+      console.error("Error al registrar el taller:", error);
       alert("Error al conectar con el servidor.");
     }
   };
@@ -85,6 +206,7 @@ export const RegistrarTallerScreen = () => {
     setAddress("");
     setMechanic(false);
     setDealership(false);
+    setimagen("");
   };
 
   return (
@@ -104,12 +226,22 @@ export const RegistrarTallerScreen = () => {
           <View style={{ justifyContent: "center", alignItems: "center" }}>
             <Text style={styles.textimg}>Agregar imagen</Text>
             <View style={styles.contanierimg}>
-              <MaterialCommunityIcons
-                name="file-image-plus-outline"
-                size={90}
-                color="black"
-                style={styles.iconStyleimg}
-              />
+              {imagen ? (
+                <TouchableOpacity
+                  style={styles.image}
+                  onPress={() => handleSnapPress()}
+                >
+                  <Image source={{ uri: imagen }} style={styles.image} />
+                </TouchableOpacity>
+              ) : (
+                <MaterialCommunityIcons
+                  name="file-image-plus-outline"
+                  size={90}
+                  color="black"
+                  style={styles.iconStyleimg}
+                  onPress={() => handleSnapPress()}
+                />
+              )}
             </View>
           </View>
 
@@ -177,6 +309,71 @@ export const RegistrarTallerScreen = () => {
           </TouchableOpacity>
         </ScrollView>
       </View>
+      {isOpen && (
+        <TouchableOpacity
+          style={styles.overlay}
+          onPress={handleOverlayPress}
+          activeOpacity={1}
+        />
+      )}
+
+      {isOpen && (
+        <BottomSheet
+          ref={sheetRef}
+          snapPoints={snapPoints}
+          enablePanDownToClose={true}
+          onClose={closeSheet} // Cambia el estado a cerrado
+          onChange={handleSheetChange} // Cambia `isOpen` según el índice actual
+        >
+          <BottomSheetView>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-around",
+                marginVertical: 15,
+              }}
+            >
+              <TouchableOpacity
+                style={styles.buttonShetContainer}
+                onPress={() => openCamera()}
+              >
+                <Feather name="camera" size={20} color="#2A2A2A" />
+                <Text style={styles.buttonShetText}>Tomar una foto</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.buttonShetContainer}
+                onPress={() => changeImage()}
+              >
+                <MaterialIcons name="photo-library" size={20} color="#2A2A2A" />
+                <Text style={styles.buttonShetText}>Subir Archivo</Text>
+              </TouchableOpacity>
+            </View>
+          </BottomSheetView>
+        </BottomSheet>
+      )}
+      {cameraOpen && (
+        <View style={styles.containerCamera}>
+          <CameraView style={styles.camera} ref={cameraRef}>
+            <View style={styles.buttonContainerCamera}>
+              <TouchableOpacity
+                style={styles.buttonCamera}
+                onPress={cancelCamera}
+              >
+                <MaterialCommunityIcons name="cancel" size={24} color="white" />
+                <Text style={styles.textCamera}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.buttonCamera}
+                onPress={takePicture}
+              >
+                <Feather name="camera" size={24} color="white" />
+                <Text style={styles.textCamera}>Tomar Foto</Text>
+              </TouchableOpacity>
+            </View>
+          </CameraView>
+        </View>
+      )}
     </GestureHandlerRootView>
   );
 };
@@ -309,5 +506,85 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     fontFamily: "Inter",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
+  },
+
+  containerCamera: {
+    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  messageCamera: {
+    textAlign: "center",
+    paddingBottom: 10,
+  },
+  camera: {
+    flex: 1,
+    justifyContent: "flex-end",
+    width: "100%",
+    height: "100%",
+    paddingVertical: 20,
+  },
+  buttonContainerCamera: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-around",
+    zIndex: 1,
+  },
+  buttonCamera: {
+    flex: 1,
+    flexDirection: "row",
+    borderColor: "#C1C1C1",
+    borderWidth: 1,
+    marginBottom: 10,
+    alignItems: "center",
+    height: 40,
+    width: "40%",
+    justifyContent: "center",
+    borderRadius: 8,
+    margin: 10,
+  },
+  textCamera: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "white",
+    justifyContent: "center",
+    marginLeft: 10,
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 0,
+  },
+  buttonShetContainer: {
+    backgroundColor: "#fff",
+    borderColor: "#C1C1C1",
+    borderWidth: 1,
+    marginBottom: 10,
+    alignItems: "center",
+    height: 80,
+    width: "40%",
+    justifyContent: "center",
+    borderRadius: 8,
+    margin: 10,
+  },
+  buttonShetText: {
+    fontFamily: "Inter",
+    fontWeight: 400,
+    fontSize: 14,
+    marginTop: 10,
+    color: "#6A6A6A",
   },
 });

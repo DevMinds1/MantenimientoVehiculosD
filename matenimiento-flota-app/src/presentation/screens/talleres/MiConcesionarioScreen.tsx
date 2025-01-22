@@ -28,6 +28,7 @@ interface Repairshop {
   phone: number;
   city: number;
   type: string;
+  image_url: string;
 }
 
 export const MiConsecionarioScreen = () => {
@@ -94,7 +95,6 @@ export const MiConsecionarioScreen = () => {
         />
         <Text style={styles.title}>Talleres</Text>
       </View>
-
 
       <View style={styles.buscar}>
         <TextInput
@@ -165,10 +165,13 @@ export const MiConsecionarioScreen = () => {
               <View style={styles.containerImg}>
                 <Image
                   source={{
-                    uri: "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/images-removebg-preview(1)%202.png?raw=true",
+                    uri:
+                      item.image_url && item.image_url !== ""
+                        ? item.image_url
+                        : "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/images-removebg-preview(1)%202.png?raw=true",
                   }}
-                  resizeMode="contain"
                   style={{ width: "100%", height: "100%" }}
+                  resizeMode="contain"
                 />
               </View>
               <View style={styles.containerInfo}>

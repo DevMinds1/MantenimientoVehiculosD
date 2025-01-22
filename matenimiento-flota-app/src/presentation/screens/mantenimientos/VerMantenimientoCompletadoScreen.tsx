@@ -9,13 +9,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
-import { useFocusEffect } from "@react-navigation/native";
+import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation/native";
+import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
 
 interface Order {
   vehicle: string;
   repairshop: string;
   mandated: string;
-  faults: string;
+  faults: string[];
   state: string;
   comments: string;
   type: string;
@@ -23,8 +24,10 @@ interface Order {
   entry_date: string;
   id: string;
 }
+
 export const VerMantenimientoCompletadoScreen = () => {
   const { top } = useSafeAreaInsets();
+   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
 
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +67,12 @@ export const VerMantenimientoCompletadoScreen = () => {
           data={pendingOrders}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <TouchableOpacity style={styles.card}  onPress={() =>
+              navigation.navigate("HomeTab", {
+                screen: "CompletadoMantenimeinto",
+                params: { id: item.id , faults: item.faults },
+              })
+            }>
               {/*   <SimpleLineIcons name="eye" size={24} color="black" /> */}
               <Text style={styles.title}>Mantenimiento {item.type}</Text>
               <Text style={styles.label}>
@@ -89,7 +97,7 @@ export const VerMantenimientoCompletadoScreen = () => {
                 Valor Cancelado:{" "}
                 <Text style={styles.value}>$60</Text>{" "}
               </Text>
-            </View>
+            </TouchableOpacity>
           )}
         />
       </View>

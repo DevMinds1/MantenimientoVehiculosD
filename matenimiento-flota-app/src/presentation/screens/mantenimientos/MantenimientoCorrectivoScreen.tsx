@@ -25,14 +25,23 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
 
 interface Vehiculo {
-  brand: string;
-  fuel_type: string;
-  mileage: string;
-  model: string;
-  oil: string;
-  plate: string;
-  type: string;
-  year: string;
+  ACTIVIDAD_UBICACION: string;
+  ANIO: number;
+  CHASIS: string;
+  COLOR: string;
+  COMBUSTIBLE: string;
+  DETALLE: string;
+  MARCA: string;
+  MODELO_ANIO: string;
+  MOTOR: string;
+  NUM: number;
+  PLACA: number;
+  PROPIEDAD: string;
+  RESPONSABLE: string;
+  TIPO: string;
+  TIPO_VEHICULO: string;
+  id: string;
+  // IMAGE_URL: string;
 }
 
 interface Taller {
@@ -50,9 +59,11 @@ interface Falla {
 }
 
 interface Encargado {
-  id: number;
-  nombre: string;
-  img: string;
+  id: string;
+  image_url: string;
+  name: string;
+  role: string;
+  email: string;
 }
 
 export const MantenimientoCorrectivoScreen = () => {
@@ -67,8 +78,8 @@ export const MantenimientoCorrectivoScreen = () => {
   const [searchQueryEncargado, setSearchQueryEncargado] = useState("");
   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
 
-  const [tabVehiculo, setTabVehiculo] = useState<"Liviano" | "Pesado">(
-    "Liviano"
+  const [tabVehiculo, setTabVehiculo] = useState<"LIVIANO" | "PESADO">(
+    "LIVIANO"
   );
   const [vehiculoSeleccionado, setVehiculoSeleccionado] =
     useState<Vehiculo | null>(null);
@@ -94,9 +105,9 @@ export const MantenimientoCorrectivoScreen = () => {
       .map((falla) => falla.descripcion);
 
     const orderData = {
-      vehicle: vehiculoSeleccionado.plate,
+      vehicle: vehiculoSeleccionado.PLACA,
       repairshop: tallerSeleccionado.id,
-      mandated: encargadoSeleccionado?.nombre,
+      mandated: encargadoSeleccionado?.name,
       faults: fallasDescripcion,
       state: "Pendiente",
       type: "Correctivo",
@@ -146,6 +157,7 @@ export const MantenimientoCorrectivoScreen = () => {
         responsePesados,
         responseConcesionario,
         responseMecanica,
+        responseEncargado,
       ] = await Promise.all([
         fetch(
           "https://us-central1-global-tine-447000-u6.cloudfunctions.net/vehicles/api/get_light_vehicles"
@@ -159,15 +171,20 @@ export const MantenimientoCorrectivoScreen = () => {
         fetch(
           "https://us-central1-global-tine-447000-u6.cloudfunctions.net/repairshops/api/get_mechanic_repairshops"
         ),
+        fetch(
+          "https://us-central1-global-tine-447000-u6.cloudfunctions.net/users/api/get_mandated_users"
+        ),
       ]);
 
       const vehiculosLivianos = await responseLivianos.json();
       const vehiculosPesados = await responsePesados.json();
       const consecionario = await responseConcesionario.json();
       const mecanica = await responseMecanica.json();
+      const encargado = await responseEncargado.json();
 
       setVehiculos([...vehiculosLivianos, ...vehiculosPesados]);
       setTalleres([...consecionario, ...mecanica]);
+      setEncargados([...encargado]);
     } catch (error) {
       console.error("Error al obtener los Datos:", error);
     }
@@ -187,51 +204,9 @@ export const MantenimientoCorrectivoScreen = () => {
       { id: 9, descripcion: "Motor" },
       { id: 10, descripcion: "Chasis" },
     ];
-    const encargadosAPI: Encargado[] = [
-      {
-        id: 1,
-        nombre: "Irma Elizabeth Cadme Samaniego",
-        img: "https://www.utpl.edu.ec/carreras/sites/default/files/Irma%20Cadme.jpg",
-      },
-      {
-        id: 2,
-        nombre: "Jorge Marcos Cordero Zambrano",
-        img: "https://www.utpl.edu.ec/carreras/sites/default/files/Jorge%20Cordero.jpg",
-      },
-      {
-        id: 3,
-        nombre: "René Rolando Elizalde Solano",
-        img: "https://www.utpl.edu.ec/carreras/sites/default/files/Jorge%20Cordero.jpg",
-      },
-      {
-        id: 4,
-        nombre: "Ángel Eduardo Encalada Encalada",
-        img: "https://www.utpl.edu.ec/carreras/sites/default/files/Angel%20Encalada_0.jpg",
-      },
-      {
-        id: 5,
-        nombre: "Franco Olivio Guamán Bastidas",
-        img: "https://www.utpl.edu.ec/carreras/sites/default/files/Franco%20Guaman_0.jpg",
-      },
-      {
-        id: 6,
-        nombre: "Jorge Afranio López Vargas",
-        img: "https://www.utpl.edu.ec/carreras/sites/default/files/Jorge%20Lopez_1.jpg",
-      },
-      {
-        id: 7,
-        nombre: "Patricia Jeanneth Ludeña González",
-        img: "https://www.utpl.edu.ec/carreras/sites/default/files/Patricia%20Lude%C3%B1a.jpg",
-      },
-      {
-        id: 8,
-        nombre: "Ruth Maria Reategui Rojas",
-        img: "https://www.utpl.edu.ec/carreras/sites/default/files/Ruth%20Reategui.jpg",
-      },
-    ];
+
     obtenerDatos();
     setFallas(fallasAPI);
-    setEncargados(encargadosAPI);
   }, []);
 
   useFocusEffect(
@@ -263,11 +238,11 @@ export const MantenimientoCorrectivoScreen = () => {
   const filteredVehiculos = vehiculos.filter((vehiculo) => {
     const queryLower = searchQueryVehiculo.toLowerCase();
     return (
-      vehiculo.type === tabVehiculo &&
-      (vehiculo.plate.toLowerCase().includes(queryLower) ||
-        vehiculo.brand.toLowerCase().includes(queryLower) ||
-        vehiculo.model.toLowerCase().includes(queryLower) ||
-        vehiculo.year.includes(queryLower))
+      vehiculo.TIPO_VEHICULO === tabVehiculo &&
+      (vehiculo.PLACA ||
+        vehiculo.MARCA.toLowerCase().includes(queryLower) ||
+        vehiculo.MODELO_ANIO.toLowerCase().includes(queryLower) ||
+        vehiculo.ANIO)
     );
   });
 
@@ -284,7 +259,7 @@ export const MantenimientoCorrectivoScreen = () => {
 
   const filteredEncargado = encargados.filter((encargado) => {
     const queryLower2 = searchQueryEncargado.toLowerCase();
-    return encargado.nombre.toLowerCase().includes(queryLower2);
+    return encargado.name.toLowerCase().includes(queryLower2);
   });
 
   return (
@@ -320,17 +295,17 @@ export const MantenimientoCorrectivoScreen = () => {
             </View>
 
             <View style={styles.tabs}>
-              <TouchableOpacity onPress={() => setTabVehiculo("Liviano")}>
+              <TouchableOpacity onPress={() => setTabVehiculo("LIVIANO")}>
                 <Text
                   style={
-                    tabVehiculo === "Liviano"
+                    tabVehiculo === "LIVIANO"
                       ? styles.activeTab
                       : styles.inactiveTab
                   }
                 >
                   Livianos
                 </Text>
-                {tabVehiculo === "Liviano" && (
+                {tabVehiculo === "LIVIANO" && (
                   <View
                     style={{
                       height: 3,
@@ -342,17 +317,17 @@ export const MantenimientoCorrectivoScreen = () => {
                   ></View>
                 )}
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setTabVehiculo("Pesado")}>
+              <TouchableOpacity onPress={() => setTabVehiculo("PESADO")}>
                 <Text
                   style={
-                    tabVehiculo === "Pesado"
+                    tabVehiculo === "PESADO"
                       ? styles.activeTab
                       : styles.inactiveTab
                   }
                 >
                   Pesados
                 </Text>
-                {tabVehiculo === "Pesado" && (
+                {tabVehiculo === "PESADO" && (
                   <View
                     style={{
                       height: 3,
@@ -378,23 +353,23 @@ export const MantenimientoCorrectivoScreen = () => {
               {filteredVehiculos.length > 0 ? (
                 filteredVehiculos.map((item) => (
                   <TouchableOpacity
-                    key={item.plate}
+                    key={item.PLACA}
                     onPress={() => setVehiculoSeleccionado(item)}
                   >
                     <View
                       style={[
                         styles.card,
-                        vehiculoSeleccionado?.plate === item.plate &&
+                        vehiculoSeleccionado?.PLACA === item.PLACA &&
                           styles.selectedCard,
                       ]}
                     >
                       <View style={styles.containerItem}>
                         <View style={styles.checkboxContainer}>
                           <Checkbox
-                            value={vehiculoSeleccionado?.plate === item.plate}
+                            value={vehiculoSeleccionado?.PLACA === item.PLACA}
                             onValueChange={() => setVehiculoSeleccionado(item)}
                             color={
-                              vehiculoSeleccionado?.plate === item.plate
+                              vehiculoSeleccionado?.PLACA === item.PLACA
                                 ? "#F2B705"
                                 : "#CCC"
                             }
@@ -415,10 +390,10 @@ export const MantenimientoCorrectivoScreen = () => {
                             numberOfLines={1}
                             ellipsizeMode="tail"
                           >
-                            {item.model}
+                            {item.MODELO_ANIO}
                           </Text>
                           <Text style={styles.listItemTextPlaca}>
-                            {item.plate}
+                            {item.PLACA}
                           </Text>
                         </View>
                       </View>
@@ -636,7 +611,7 @@ export const MantenimientoCorrectivoScreen = () => {
             <ScrollView style={styles.scrollContainerEncargado}>
               {filteredEncargado.map((item) => (
                 <TouchableOpacity
-                  key={item.id}
+                  key={item.id ? item.id : Math.random()} 
                   onPress={() => setEncargadoSeleccionado(item)}
                 >
                   <View
@@ -650,7 +625,7 @@ export const MantenimientoCorrectivoScreen = () => {
                       <View style={styles.containerImgEncar}>
                         <Image
                           source={{
-                            uri: item.img,
+                            uri: item.image_url,
                           }}
                           style={{
                             width: "100%",
@@ -665,7 +640,7 @@ export const MantenimientoCorrectivoScreen = () => {
                           numberOfLines={1}
                           ellipsizeMode="tail"
                         >
-                          {item.nombre}
+                          {item.name}
                         </Text>
                       </View>
                     </View>

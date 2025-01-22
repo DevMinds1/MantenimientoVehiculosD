@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { act, useCallback, useEffect, useRef, useState } from "react";
 import {
   Text,
   View,
@@ -6,6 +6,8 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Image,
+  Button,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { globalStyles } from "../../theme/theme";
@@ -13,22 +15,57 @@ import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Checkbox from "expo-checkbox";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from "@react-navigation/native";
 import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
+import Feather from "@expo/vector-icons/Feather";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
+interface Encargado {
+  id: string;
+  image_url: string;
+  name: string;
+  role: string;
+  email: string;
+}
 export const RegistrarVehiculoScreen = () => {
   const { top } = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
   const [light, setLight] = useState(false);
   const [heavy, setHeavy] = useState(false);
+  const [encargados, setEncargados] = useState<Encargado[]>([]);
+  const [searchQueryEncargado, setSearchQueryEncargado] = useState("");
+  const [encargadoSeleccionado, setEncargadoSeleccionado] =
+    useState<Encargado | null>(null);
 
-  const [plate, setPlate] = useState("");
-  const [brand, setBrand] = useState("");
-  const [year, setYear] = useState("");
-  const [mileage, setMileage] = useState("");
-  const [model, setModel] = useState("");
-  const [fuel_type, setFuelType] = useState("");
-  const [oil, setOil] = useState("");
+  // Estados para los nuevos campos
+  const [actividadUbicacion, setActividadUbicacion] = useState("");
+  const [anio, setAnio] = useState("");
+  const [chasis, setChasis] = useState("");
+  const [color, setColor] = useState("");
+  const [combustible, setCombustible] = useState("");
+  const [detalle, setDetalle] = useState("");
+  const [marca, setMarca] = useState("");
+  const [modeloAnio, setModeloAnio] = useState("");
+  const [motor, setMotor] = useState("");
+  const [num, setNum] = useState("");
+  const [placa, setPlaca] = useState("");
+  const [propiedad, setPropiedad] = useState("");
+  const [responsable, setResponsable] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [tipoVehiculo, setTipoVehiculo] = useState("");
+  const [imagen, setimagen] = useState("");
+
+  const sheetRef = useRef<BottomSheet>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const snapPoints = ["20%"];
 
   const handleLightChange = (value: boolean) => {
     setLight(value);
@@ -40,31 +77,182 @@ export const RegistrarVehiculoScreen = () => {
     if (value) setLight(false);
   };
 
+  //BottomSheet
+
+  const openSheet = () => {
+    sheetRef.current?.snapToIndex(0);
+  };
+
+  const closeSheet = () => {
+    sheetRef.current?.close();
+  };
+
+  const handleOverlayPress = () => {
+    if (isOpen) closeSheet();
+  };
+
+  const handleSheetChange = (index: number) => {
+    setIsOpen(index !== -1);
+  };
+
+  // Apis
+  const obtenerDatos = async () => {
+    try {
+      const [responseEncargado] = await Promise.all([
+        fetch(
+          "https://us-central1-global-tine-447000-u6.cloudfunctions.net/users/api/get_mandated_users"
+        ),
+      ]);
+      const encargado = await responseEncargado.json();
+      setEncargados([...encargado]);
+    } catch (error) {
+      console.error("Error al obtener los Datos:", error);
+    }
+  };
+
+  useEffect(() => {
+    obtenerDatos();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      obtenerDatos();
+    }, [])
+  );
+
+  //Encargado
+  const handleSearchEncargado = (query: string) => {
+    setSearchQueryEncargado(query);
+  };
+
+  const filteredEncargado = encargados.filter((encargado) => {
+    const queryLower2 = searchQueryEncargado.toLowerCase();
+    return encargado.name.toLowerCase().includes(queryLower2);
+  });
+
+  //Camara-------------------------------------------------------------
+  //Galeria
+  const changeImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+    if (!result.canceled) {
+      setimagen(result.assets[0].uri);
+      setIsOpen(false);
+    } else {
+      console.log("Image selection was canceled");
+    }
+  };
+
+  //Camara
+  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const cameraRef = useRef<CameraView | null>(null);
+
+  const checkPermissions = useCallback(async () => {
+    if (!permission) {
+      await requestPermission();
+    }
+  }, [permission, requestPermission]);
+
+  const handleSnapPress = useCallback(async () => {
+    const { granted } = await requestPermission();
+    if (!granted) {
+      alert("Se requieren permisos para acceder a la cámara.");
+      return;
+    }
+    sheetRef.current?.snapToIndex(0);
+    setIsOpen(true);
+  }, [requestPermission]);
+
+  const cancelCamera = () => {
+    setCameraOpen(false);
+    setIsOpen(false); // Cierra la cámara
+  };
+
+  const openCamera = () => {
+    setCameraOpen(true);
+    setIsOpen(false);
+  };
+
+  const takePicture = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync();
+        if (photo) {
+          setimagen(photo.uri);
+          setCameraOpen(false);
+        } else {
+          console.log("No photo captured");
+        }
+      } catch (error) {
+        console.error("Error capturing photo:", error);
+      }
+    }
+  };
+
+  //---------------------------------------
   const handleSubmit = async () => {
     if (
-      !plate ||
-      !brand ||
-      !year ||
-      !mileage ||
-      !model ||
-      !fuel_type ||
-      !oil ||
+      !actividadUbicacion ||
+      !anio ||
+      !chasis ||
+      !color ||
+      !combustible ||
+      !detalle ||
+      !marca ||
+      !modeloAnio ||
+      !motor ||
+      !num ||
+      !placa ||
+      !propiedad ||
+      !encargadoSeleccionado ||
+      !tipo ||
       (!light && !heavy)
     ) {
       alert("Por favor, complete todos los campos, son obligatorios.");
       return;
     }
 
-    const vehicleData = {
-      plate,
-      brand,
-      year,
-      mileage,
-      model,
-      fuel_type: fuel_type,
-      oil,
-      type: light ? "Liviano" : "Pesado",
-    };
+    const extension = imagen.split(".").pop()?.toLowerCase();
+    let mimeType = "image/jpeg";
+
+    if (extension === "png") {
+      mimeType = "image/png";
+    } else if (extension === "jpg" || extension === "jpeg") {
+      mimeType = "image/jpeg";
+    } else {
+      alert(
+        "Formato de imagen no soportado. Solo se permiten archivos JPG o PNG."
+      );
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("image", {
+      uri: imagen,
+      type: mimeType,
+      name: imagen.substring(imagen.lastIndexOf("/") + 1),
+    } as any);
+
+    formData.append("actividadUbicacion", actividadUbicacion);
+    formData.append("anio", anio);
+    formData.append("chasis", chasis);
+    formData.append("color", color);
+    formData.append("combustible", combustible);
+    formData.append("detalle", detalle);
+    formData.append("marca", marca);
+    formData.append("modeloAnio", modeloAnio);
+    formData.append("motor", motor);
+    formData.append("num", num);
+    formData.append("placa", placa);
+    formData.append("propiedad", propiedad);
+    formData.append("responsable", encargadoSeleccionado?.name || "");
+    formData.append("tipo", tipo);
+    formData.append("tipoVehiculo", light ? "LIVIANO" : "PESADO");
 
     try {
       const response = await fetch(
@@ -72,18 +260,16 @@ export const RegistrarVehiculoScreen = () => {
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
-          body: JSON.stringify(vehicleData),
+          body: formData,
         }
       );
 
       const data = await response.json();
       if (response.ok) {
         alert(data.message);
-
         navigation.navigate("Vehiculos", { screen: "VehiculosLivianos" });
-
         resetFields();
       } else {
         alert("Error: " + data.message);
@@ -95,133 +281,333 @@ export const RegistrarVehiculoScreen = () => {
   };
 
   const resetFields = () => {
-    setPlate("");
-    setBrand("");
-    setYear("");
-    setMileage("");
-    setModel("");
-    setFuelType("");
-    setOil("");
+    setActividadUbicacion("");
+    setAnio("");
+    setChasis("");
+    setColor("");
+    setCombustible("");
+    setDetalle("");
+    setMarca("");
+    setModeloAnio("");
+    setMotor("");
+    setNum("");
+    setPlaca("");
+    setPropiedad("");
+    setResponsable("");
+    setTipo("");
+    setTipoVehiculo("");
     setLight(false);
     setHeavy(false);
+    setimagen("");
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={globalStyles(top).container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.containerTitle}>
-            <SimpleLineIcons
-              name="arrow-left"
-              size={19}
-              color="#004270"
-              style={styles.iconStyle}
-              onPress={() => navigation.navigate("HomeTab", { screen: "Home" })}
-            />
-            <Text style={styles.title}>Registro de Vehículo</Text>
-          </View>
-          <View style={{ justifyContent: "center", alignItems: "center" }}>
-            <Text style={styles.textimg}>Agregar imagen</Text>
-            <View style={styles.contanierimg}>
+    <GestureHandlerRootView style={globalStyles(top).container}>
+      <View style={styles.containerTitle}>
+        <SimpleLineIcons
+          name="arrow-left"
+          size={19}
+          color="#004270"
+          style={styles.iconStyle}
+          onPress={() => navigation.navigate("HomeTab", { screen: "Home" })}
+        />
+        <Text style={styles.title}>Registro de Vehículo</Text>
+      </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={true}
+      >
+        <View style={{ justifyContent: "center", alignItems: "center" }}>
+          <Text style={styles.textimg}>Agregar imagen</Text>
+          <View style={styles.contanierimg}>
+            {imagen ? (
+              <TouchableOpacity
+                style={styles.image}
+                onPress={() => handleSnapPress()}
+              >
+                <Image source={{ uri: imagen }} style={styles.image} />
+              </TouchableOpacity>
+            ) : (
               <MaterialCommunityIcons
                 name="file-image-plus-outline"
                 size={90}
                 color="black"
                 style={styles.iconStyleimg}
+                onPress={() => handleSnapPress()}
               />
-            </View>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.formContainer}>
+          {/* Form Inputs */}
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Placa:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese la placa del vehículo"
+              value={placa}
+              onChangeText={setPlaca}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Actividad o Ubicación:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese la Actividad o Ubicación"
+              value={actividadUbicacion}
+              onChangeText={setActividadUbicacion}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Año:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese Año"
+              value={anio}
+              onChangeText={setAnio}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Chasis:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese el número de chasis"
+              value={chasis}
+              onChangeText={setChasis}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Color:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese color de vehículo"
+              value={color}
+              onChangeText={setColor}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Combustible:</Text>
+            <TextInput
+              style={styles.inputModelo}
+              placeholder="Ingrese el tipo de combustible"
+              value={combustible}
+              onChangeText={setCombustible}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Detalle:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese una descripción sobre el vehículo"
+              value={detalle}
+              onChangeText={setDetalle}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Marca:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese la marca del vehículo"
+              value={marca}
+              onChangeText={setMarca}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Modelo o Año del modelo:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese el modelo o año del modelo"
+              value={modeloAnio}
+              onChangeText={setModeloAnio}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Motor:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese el número o identificación del motor"
+              value={motor}
+              onChangeText={setMotor}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Número:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese el número del vehículo"
+              value={num}
+              onChangeText={setNum}
+            />
+          </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Propiedad:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese la propiedad del vehículo"
+              value={propiedad}
+              onChangeText={setPropiedad}
+            />
           </View>
 
-          <View style={styles.formContainer}>
-            {/* Form Inputs */}
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>Placa:</Text>
+          {/* Encargados */}
+          <View style={styles.section}>
+            <Text style={styles.checkboxLabel}>Encargado</Text>
+            <View style={styles.buscar}>
               <TextInput
-                style={styles.input}
-                placeholder="Ingrese placa"
-                value={plate}
-                onChangeText={setPlate}
+                style={styles.searchInput}
+                placeholder="Buscar Encargado"
+                value={searchQueryEncargado}
+                onChangeText={handleSearchEncargado}
+              />
+              <Ionicons
+                name="filter"
+                size={24}
+                color="gray"
+                style={styles.iconStyle}
               />
             </View>
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>Marca:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ingrese marca"
-                value={brand}
-                onChangeText={setBrand}
-              />
-            </View>
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>Anio:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ingrese año"
-                value={year}
-                onChangeText={setYear}
-              />
-            </View>
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>Kilometraje:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ingrese kilometraje"
-                value={mileage}
-                onChangeText={setMileage}
-              />
-            </View>
-            <View style={styles.inputRowModelo}>
-              <Text style={styles.label}>Modelo:</Text>
-              <TextInput
-                style={styles.inputModelo}
-                placeholder="Ingrese modelo"
-                value={model}
-                onChangeText={setModel}
-              />
-            </View>
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>Tipo de Gasolina:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ingrese tipo gasolina"
-                value={fuel_type}
-                onChangeText={setFuelType}
-              />
-            </View>
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>Aceite:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ingrese aceite"
-                value={oil}
-                onChangeText={setOil}
-              />
-            </View>
+            <ScrollView
+              style={styles.scrollContainerEncargado}
+              nestedScrollEnabled={true}
+            >
+              {filteredEncargado.map((item) => (
+                <TouchableOpacity
+                  key={item.id ? item.id : Math.random()}
+                  onPress={() => setEncargadoSeleccionado(item)}
+                >
+                  <View
+                    style={[
+                      styles.card,
+                      encargadoSeleccionado?.id === item.id &&
+                        styles.selectedCard,
+                    ]}
+                  >
+                    <View style={styles.containerItem}>
+                      <View style={styles.containerImgEncar}>
+                        <Image
+                          source={{
+                            uri: item.image_url,
+                          }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            borderRadius: 50,
+                          }}
+                        />
+                      </View>
+                      <View style={styles.containerInfo}>
+                        <Text
+                          style={styles.nameEncargado}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
+                          {item.name}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
-          <View style={styles.containerCheckbox}>
-            <View style={styles.checkboxContainer}>
-              <Checkbox
-                value={light}
-                onValueChange={handleLightChange}
-                color="#D3D3D3"
-              />
-              <Text style={styles.checkboxLabel}>Liviano</Text>
-            </View>
-            <View style={styles.checkboxContainer}>
-              <Checkbox
-                value={heavy}
-                onValueChange={handleHeavyChange}
-                color="#D3D3D3"
-              />
-              <Text style={styles.checkboxLabel}>Pesado</Text>
-            </View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Tipo:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese la categoría o tipo de vehículo"
+              value={tipo}
+              onChangeText={setTipo}
+            />
           </View>
+        </View>
+        <View style={styles.containerCheckbox}>
+          <View style={styles.checkboxContainer}>
+            <Checkbox
+              value={light}
+              onValueChange={handleLightChange}
+              color="#D3D3D3"
+            />
+            <Text style={styles.checkboxLabel}>Liviano</Text>
+          </View>
+          <View style={styles.checkboxContainer}>
+            <Checkbox
+              value={heavy}
+              onValueChange={handleHeavyChange}
+              color="#D3D3D3"
+            />
+            <Text style={styles.checkboxLabel}>Pesado</Text>
+          </View>
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Aceptar</Text>
+        </TouchableOpacity>
+      </ScrollView>
 
-          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>Aceptar</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
+      {isOpen && (
+        <TouchableOpacity
+          style={styles.overlay}
+          onPress={handleOverlayPress}
+          activeOpacity={1}
+        />
+      )}
+      {isOpen && (
+        <BottomSheet
+          ref={sheetRef}
+          snapPoints={snapPoints}
+          enablePanDownToClose={true}
+          onClose={closeSheet} // Cambia el estado a cerrado
+          onChange={handleSheetChange} // Cambia `isOpen` según el índice actual
+        >
+          <BottomSheetView>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-around",
+                marginVertical: 15,
+              }}
+            >
+              <TouchableOpacity
+                style={styles.buttonShetContainer}
+                onPress={() => openCamera()}
+              >
+                <Feather name="camera" size={20} color="#2A2A2A" />
+                <Text style={styles.buttonShetText}>Tomar una foto</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.buttonShetContainer}
+                onPress={() => changeImage()}
+              >
+                <MaterialIcons name="photo-library" size={20} color="#2A2A2A" />
+                <Text style={styles.buttonShetText}>Subir Archivo</Text>
+              </TouchableOpacity>
+            </View>
+          </BottomSheetView>
+        </BottomSheet>
+      )}
+      {cameraOpen && (
+        <View style={styles.containerCamera}>
+          <CameraView style={styles.camera} ref={cameraRef}>
+            <View style={styles.buttonContainerCamera}>
+              <TouchableOpacity
+                style={styles.buttonCamera}
+                onPress={cancelCamera}
+              >
+                <MaterialCommunityIcons name="cancel" size={24} color="white" />
+                <Text style={styles.textCamera}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.buttonCamera}
+                onPress={takePicture}
+              >
+                <Feather name="camera" size={24} color="white" />
+                <Text style={styles.textCamera}>Tomar Foto</Text>
+              </TouchableOpacity>
+            </View>
+          </CameraView>
+        </View>
+      )}
     </GestureHandlerRootView>
   );
 };
@@ -283,9 +669,9 @@ const styles = StyleSheet.create({
   },
 
   inputRow: {
-    width: "47%",
     marginBottom: 12,
-    marginRight: 10,
+    width: "95%",
+    marginHorizontal: "auto",
   },
 
   label: {
@@ -353,5 +739,143 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     fontFamily: "Inter",
+  },
+  iconosFotos: {
+    marginTop: 10,
+    backgroundColor: "green",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
+  },
+
+  containerCamera: {
+    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  messageCamera: {
+    textAlign: "center",
+    paddingBottom: 10,
+  },
+  camera: {
+    flex: 1,
+    justifyContent: "flex-end",
+    width: "100%",
+    height: "100%",
+    paddingVertical: 20,
+  },
+  buttonContainerCamera: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-around",
+    zIndex: 1,
+  },
+  buttonCamera: {
+    flex: 1,
+    flexDirection: "row",
+    borderColor: "#C1C1C1",
+    borderWidth: 1,
+    marginBottom: 10,
+    alignItems: "center",
+    height: 40,
+    width: "40%",
+    justifyContent: "center",
+    borderRadius: 8,
+    margin: 10,
+  },
+  textCamera: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "white",
+    justifyContent: "center",
+    marginLeft: 10,
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 0,
+  },
+  buttonShetContainer: {
+    backgroundColor: "#fff",
+    borderColor: "#C1C1C1",
+    borderWidth: 1,
+    marginBottom: 10,
+    alignItems: "center",
+    height: 80,
+    width: "40%",
+    justifyContent: "center",
+    borderRadius: 8,
+    margin: 10,
+  },
+  buttonShetText: {
+    fontFamily: "Inter",
+    fontWeight: 400,
+    fontSize: 14,
+    marginTop: 10,
+    color: "#6A6A6A",
+  },
+  section: {
+    marginBottom: 10,
+    marginTop: 10,
+  },
+  buscar: {
+    flexDirection: "row",
+    marginTop: 12,
+    marginBottom: 12,
+    width: "100%",
+    alignItems: "center",
+  },
+  searchInput: {
+    borderWidth: 0.5,
+    borderColor: "#BDBDBD",
+    paddingHorizontal: 10,
+    height: 40,
+    width: "90%",
+    borderRadius: 30,
+  },
+  containerImgEncar: {
+    height: 38,
+    width: 38,
+    margin: 5,
+    borderRadius: 100,
+  },
+  nameEncargado: {
+    fontFamily: "Inter",
+    fontWeight: 400,
+    fontSize: 16,
+    color: "#6A6A6A",
+  },
+
+  scrollContainerEncargado: {
+    height: 150,
+  },
+  selectedCard: {
+    backgroundColor: "#F7F7F7",
+    borderColor: "#1890ff",
+  },
+  containerItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 1,
+  },
+  containerInfo: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    overflow: "hidden",
+  },
+  card: {
+    paddingHorizontal: 10,
+    borderRadius: 5,
   },
 });

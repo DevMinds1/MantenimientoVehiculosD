@@ -25,6 +25,22 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permite que $(PRODUCT_NAME) acceda a tu cámara",
+          "recordAudioAndroid": true
+        }
+      ]
+
+    ],
     "extra": {
       "eas": {
         "projectId": "c182e2eb-3538-46a7-b791-fd8925025d70"

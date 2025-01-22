@@ -22,14 +22,23 @@ import {
 } from "@react-navigation/native";
 
 interface Vehicle {
-  plate: string;
-  brand: string;
-  year: number;
-  mileage: number;
-  model: string;
-  fuel_type: string;
-  oil: string;
-  type: string;
+  ACTIVIDAD_UBICACION: string;
+  ANIO: number;
+  CHASIS: string;
+  COLOR: string;
+  COMBUSTIBLE: string;
+  DETALLE: string;
+  MARCA: string;
+  MODELO_ANIO: string;
+  MOTOR: string;
+  NUM: number;
+  PLACA: string;
+  PROPIEDAD: string;
+  RESPONSABLE: string;
+  TIPO: string;
+  TIPO_VEHICULO: string;
+  id: string;
+  IMAGE_URL: string;
 }
 
 export const MisVehiculoScreen = () => {
@@ -65,8 +74,8 @@ export const MisVehiculoScreen = () => {
     if (searchQuery) {
       const filtered = vehicles.filter(
         (vehicle) =>
-          vehicle.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          vehicle.plate.toLowerCase().includes(searchQuery.toLowerCase())
+          vehicle.MARCA.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          vehicle.PLACA.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredVehicles(filtered);
     } else {
@@ -178,7 +187,10 @@ export const MisVehiculoScreen = () => {
               <View style={styles.containerImg}>
                 <Image
                   source={{
-                    uri: "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/Hilux00-removebg-preview%201.png?raw=true",
+                    uri:
+                      item.IMAGE_URL && item.IMAGE_URL !== ""
+                        ? item.IMAGE_URL
+                        : "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/Hilux00-removebg-preview%201.png?raw=true",
                   }}
                   style={{ width: "100%", height: "100%" }}
                 />
@@ -189,9 +201,9 @@ export const MisVehiculoScreen = () => {
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
-                  {item.model}
+                  {item.MARCA}
                 </Text>
-                <Text style={styles.listItemTextPlaca}>{item.plate}</Text>
+                <Text style={styles.listItemTextPlaca}>{item.PLACA}</Text>
               </View>
             </View>
             <View

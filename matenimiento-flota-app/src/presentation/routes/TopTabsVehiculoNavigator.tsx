@@ -10,12 +10,15 @@ const Tab = createMaterialTopTabNavigator();
 export const TopTabsVehiculoNavigator = () => {
   const { top } = useSafeAreaInsets();
   return (
-    <Tab.Navigator style={{ marginTop: top}}>
+    <Tab.Navigator style={{ marginTop: top }}>
       <Tab.Screen
         name="Pendientes"
         component={VerMantenimientoPendienteScreen}
       />
-      <Tab.Screen name="Completados" component={VerMantenimientoCompletadoScreen} />
+      <Tab.Screen
+        name="Completados"
+        component={VerMantenimientoCompletadoScreen}
+      />
     </Tab.Navigator>
   );
 };

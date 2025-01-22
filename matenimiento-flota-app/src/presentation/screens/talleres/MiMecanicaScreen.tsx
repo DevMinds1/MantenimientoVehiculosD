@@ -23,11 +23,13 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 interface Repairshop {
+  id: string;
   name: string;
   address: string;
   phone: number;
   city: number;
   type: string;
+  image_url: string;
 }
 
 export const MiMecanicaScreen = () => {
@@ -170,10 +172,13 @@ export const MiMecanicaScreen = () => {
               <View style={styles.containerImg}>
                 <Image
                   source={{
-                    uri: "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/images-removebg-preview(1)%202.png?raw=true",
+                    uri:
+                      item.image_url && item.image_url !== ""
+                        ? item.image_url
+                        : "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/images-removebg-preview(1)%202.png?raw=true",
                   }}
-                  resizeMode="contain"
                   style={{ width: "100%", height: "100%" }}
+                  resizeMode="contain"
                 />
               </View>
               <View style={styles.containerInfo}>
@@ -202,9 +207,7 @@ export const MiMecanicaScreen = () => {
       <View style={styles.containerAgregar}>
         <TouchableOpacity
           style={styles.agregar}
-          onPress={() =>
-            navigation.navigate("HomeTab", { screen: "Talleres" })
-          }
+          onPress={() => navigation.navigate("HomeTab", { screen: "Talleres" })}
         >
           <Text style={styles.textAgregar}>+ Agregar Taller</Text>
         </TouchableOpacity>

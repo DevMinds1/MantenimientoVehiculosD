@@ -10,9 +10,16 @@ import { SideMenuNavigator } from "./SaveMenuNavigator";
 
 import { TopTabsVehiculoNavigator } from "./TopTabsVehiculoNavigator";
 
+export type Order = {
+  vehicle: string;
+  repairshop: string;
+  mandated: string;
+  faults: string;
+  state: string;
+  comments: string; }
 
 export type RootButtonParams = {
-  HomeTab: { screen: string };
+  HomeTab: { screen: string ;  params?: { id: string , faults: string[] }};
   Vehiculos: { screen: string };
   Mantenimientos: undefined;
 };

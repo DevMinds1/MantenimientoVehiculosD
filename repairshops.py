@@ -1,42 +1,54 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from firebaseconfig import db
+from firebaseconfig import db, bucket
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 cors = CORS(app, origins='*')
 
 @app.route('/api/register_repairshop', methods=['POST'])
 def register_repairshop():
-    data = request.json
-    name = data.get('name')
-    address = data.get('address')
-    phone = data.get('phone')
-    city = data.get('city')
-    type = data.get('type')
-
-    repairshops_ref = db.collection('repairshops')
-    new_repairshops = {
-        'name': name,
-        'address': address,
-        'phone': phone,
-        'city': city,
-        'type': type
-    }
-
-    repairshops_ref.add(new_repairshops)
-
-    return jsonify({'message': 'Taller registrado exitosamente'}), 201
-
-@app.route('/api/get_repairshops', methods=['GET'])
-def get_repairshops():
     try:
+        name = request.form.get('name')
+        address = request.form.get('address')
+        phone = request.form.get('phone')
+        city = request.form.get('city')
+        type = request.form.get('type')
+        image = request.files.get('image')
+
+        if not image:
+            return jsonify({'error': 'No se envió ninguna imagen'}), 400
+
+        filename = secure_filename(image.filename)
+        blob = bucket.blob(f"repairshops/{filename}")
+        blob.upload_from_file(image.stream, content_type=image.content_type)
+
+        blob.make_public()
+        image_url = blob.public_url
+
         repairshops_ref = db.collection('repairshops')
-        repairshops = [doc.to_dict() for doc in repairshops_ref.stream()]
-        return jsonify(repairshops), 200
+        new_repairshop = {
+            'name': name,
+            'address': address,
+            'phone': phone,
+            'city': city,
+            'type': type,
+            'image_url': image_url
+        }
+
+        doc_ref = repairshops_ref.add(new_repairshop)[1]
+
+        doc_id = doc_ref.id
+
+        repairshops_ref.document(doc_id).update({'id': doc_id})
+
+        return jsonify({'message': 'Taller registrado exitosamente', 'image_url': image_url}), 201
+
     except Exception as e:
+        print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
-
 @app.route('/api/get_mechanic_repairshops', methods=['GET'])
 def get_mechanic_repairshops():
     try:

@@ -1,42 +1,79 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from firebaseconfig import db
+from firebaseconfigvehicles import db, bucket
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 cors = CORS(app, origins='*')
 
 @app.route('/api/register_vehicle', methods=['POST'])
 def register_vehicle():
-    data = request.json
-    plate = data.get('plate')
-    brand = data.get('brand')
-    year = data.get('year')
-    mileage = data.get('mileage')
-    model = data.get('model')
-    fuel_type = data.get('fuel_type')
-    oil = data.get('oil')
-    type = data.get('type')
+    try:
+        actividadUbicacion = request.form.get('actividadUbicacion')
+        anio = request.form.get('anio')
+        chasis = request.form.get('chasis')
+        color = request.form.get('color')
+        combustible = request.form.get('combustible')
+        detalle = request.form.get('detalle')
+        marca = request.form.get('marca')
+        modeloAnio = request.form.get('modeloAnio')
+        motor = request.form.get('motor')
+        num = request.form.get('num')
+        placa = request.form.get('placa')
+        propiedad = request.form.get('propiedad')
+        responsable = request.form.get('responsable')
+        tipo = request.form.get('tipo')
+        tipoVehiculo = request.form.get('tipoVehiculo')
+        image = request.files.get('image')
 
-    vehicles_ref = db.collection('vehicles')
-    new_vehicle = {
-        'plate': plate,
-        'brand': brand,
-        'year': year,
-        'mileage': mileage,
-        'model': model,
-        'fuel_type': fuel_type,
-        'oil': oil,
-        'type': type
-    }
+        if not image:
+            return jsonify({'error': 'No se envió ninguna imagen'}), 400
 
-    vehicles_ref.add(new_vehicle)
+        filename = secure_filename(image.filename)
+        blob = bucket.blob(f"vehicles/{filename}")
+        blob.upload_from_file(image.stream, content_type=image.content_type)
 
-    return jsonify({'message': 'Vehículo registrado correctamente'}), 201
+        blob.make_public()
+        image_url = blob.public_url
+
+        vehicles_ref = db.collection('vehiculos')
+        new_vehicle = {
+            'ACTIVIDAD_UBICACION': actividadUbicacion,
+            'ANIO': anio,
+            'CHASIS': chasis,
+            'COLOR': color,
+            'COMBUSTIBLE': combustible,
+            'DETALLE': detalle,
+            'MARCA': marca,
+            'MODELO_ANIO': modeloAnio,
+            'MOTOR': motor,
+            'NUM': num,
+            'PLACA': placa,
+            'PROPIEDAD': propiedad,
+            'RESPONSABLE': responsable,
+            'TIPO': tipo,
+            'TIPO_VEHICULO': tipoVehiculo,
+            'IMAGE_URL': image_url 
+        }
+
+        doc_ref = vehicles_ref.add(new_vehicle)[1]
+
+        doc_id = doc_ref.id
+
+        vehicles_ref.document(doc_id).update({'id': doc_id})
+
+        return jsonify({'message': 'Vehículo registrado correctamente', 'image_url': image_url}), 201
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/get_vehicles', methods=['GET'])
 def get_vehicles():
     try:
-        vehicles_ref = db.collection('vehicles')
+        vehicles_ref = db.collection('vehiculos')
         vehicles = [doc.to_dict() for doc in vehicles_ref.stream()]
         return jsonify(vehicles), 200
     except Exception as e:
@@ -45,7 +82,7 @@ def get_vehicles():
 @app.route('/api/get_light_vehicles', methods=['GET'])
 def get_light_vehicles():
     try:
-        vehicles_ref = db.collection('vehicles').where('type', '==', 'Liviano')
+        vehicles_ref = db.collection('vehiculos').where('TIPO_VEHICULO', '==', 'LIVIANO')
         vehicles = [doc.to_dict() for doc in vehicles_ref.stream()]
         return jsonify(vehicles), 200
     except Exception as e:
@@ -54,7 +91,7 @@ def get_light_vehicles():
 @app.route('/api/get_heavy_vehicles', methods=['GET'])
 def get_heavy_vehicles():
     try:
-        vehicles_ref = db.collection('vehicles').where('type', '==', 'Pesado')
+        vehicles_ref = db.collection('vehiculos').where('TIPO_VEHICULO', '==', 'PESADO')
         vehicles = [doc.to_dict() for doc in vehicles_ref.stream()]
         return jsonify(vehicles), 200
     except Exception as e:

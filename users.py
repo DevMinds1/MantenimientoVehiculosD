@@ -8,7 +8,7 @@ from firebaseconfig import db
 app = Flask(__name__)
 cors = CORS(app, origins='*')
 
-FIREBASE_WEB_API_KEY = "AIzaSyDQ-1YGyE5oDxVaI1B7mYu13uvm3W0ykZ0"
+FIREBASE_WEB_API_KEY = "AIzaSyDBYylNRuPkJLGZGNqewF9w93UzIUJpvLg"
 
 @app.route('/api/authentication', methods=['POST'])
 def authentication():
@@ -35,6 +35,7 @@ def authentication():
         response_data = response.json()
         user_id = response_data.get('localId')
 
+        print(user_id)
         user_doc = db.collection('users').document(user_id).get()
 
         if user_doc.exists:
@@ -48,6 +49,23 @@ def authentication():
     except Exception as e:
         return jsonify({'error': 'Error interno: ' + str(e)}), 500
 
+@app.route('/api/get_mandated_users', methods=['GET'])
+def get_mandated_users():
+    try:
+        users_ref = db.collection('users').where('role', '==', 'mandated')
+        users = [doc.to_dict() for doc in users_ref.stream()]
+        return jsonify(users), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/get_admin_users', methods=['GET'])
+def get_admin_users():
+    try:
+        users_ref = db.collection('users').where('role', '==', 'admin')
+        users = [doc.to_dict() for doc in users_ref.stream()]
+        return jsonify(users), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)

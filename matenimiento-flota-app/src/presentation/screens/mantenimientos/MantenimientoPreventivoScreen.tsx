@@ -60,7 +60,7 @@ interface Falla {
 }
 
 interface Encargado {
-  id: string;
+  uid: string;
   image_url: string;
   name: string;
   role: string;
@@ -122,7 +122,7 @@ export const MantenimientoPreventivoScreen = () => {
     const orderData = {
       vehicle: vehiculoSeleccionado.PLACA,
       repairshop: tallerSeleccionado.id,
-      mandated: encargadoSeleccionado?.name,
+      mandated: encargadoSeleccionado?.uid,
       faults: fallasDescripcion,
       state: "Pendiente",
       type: "Preventivo",
@@ -623,13 +623,13 @@ export const MantenimientoPreventivoScreen = () => {
             <ScrollView style={styles.scrollContainerEncargado}>
               {filteredEncargado.map((item) => (
                 <TouchableOpacity
-                  key={item.id ? item.id : Math.random()} // Usa un valor único en caso de que 'id' no esté definido
+                  key={item.uid ? item.uid : Math.random()} 
                   onPress={() => setEncargadoSeleccionado(item)}
                 >
                   <View
                     style={[
                       styles.card,
-                      encargadoSeleccionado?.id === item.id &&
+                      encargadoSeleccionado?.uid === item.uid &&
                         styles.selectedCard,
                     ]}
                   >

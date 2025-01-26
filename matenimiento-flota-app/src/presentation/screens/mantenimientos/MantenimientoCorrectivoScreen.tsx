@@ -59,7 +59,7 @@ interface Falla {
 }
 
 interface Encargado {
-  id: string;
+  uid: string;
   image_url: string;
   name: string;
   role: string;
@@ -107,7 +107,7 @@ export const MantenimientoCorrectivoScreen = () => {
     const orderData = {
       vehicle: vehiculoSeleccionado.PLACA,
       repairshop: tallerSeleccionado.id,
-      mandated: encargadoSeleccionado?.name,
+      mandated: encargadoSeleccionado?.uid,
       faults: fallasDescripcion,
       state: "Pendiente",
       type: "Correctivo",
@@ -611,13 +611,13 @@ export const MantenimientoCorrectivoScreen = () => {
             <ScrollView style={styles.scrollContainerEncargado}>
               {filteredEncargado.map((item) => (
                 <TouchableOpacity
-                  key={item.id ? item.id : Math.random()} 
+                  key={item.uid ? item.uid : Math.random()} 
                   onPress={() => setEncargadoSeleccionado(item)}
                 >
                   <View
                     style={[
                       styles.card,
-                      encargadoSeleccionado?.id === item.id &&
+                      encargadoSeleccionado?.uid === item.uid &&
                         styles.selectedCard,
                     ]}
                   >
@@ -652,7 +652,7 @@ export const MantenimientoCorrectivoScreen = () => {
 
           {/* Resumen y Generar Orden */}
           <View style={styles.summary}>
-            {/* <Text>Vehículo: {vehiculoSeleccionado?.plate || "Ninguno"}</Text>
+             <Text>Vehículo: {vehiculoSeleccionado?.PLACA || "Ninguno"}</Text>
             <Text>Taller: {tallerSeleccionado?.name || "Ninguno"}</Text>
             <Text>
               Fallas:{" "}
@@ -660,8 +660,8 @@ export const MantenimientoCorrectivoScreen = () => {
                 .map((id) => fallas.find((f) => f.id === id)?.descripcion)
                 .join(", ") || "Ninguna"}
             </Text>
-            <Text>Encargado: {encargadoSeleccionado?.nombre || "Ninguno"}</Text>
-            <Text>Observaciones: {observaciones || "Ninguna"}</Text> */}
+            <Text>Encargado: {encargadoSeleccionado?.uid || "Ninguno"}</Text>
+            <Text>Observaciones: {observaciones || "Ninguna"}</Text> 
             <TouchableOpacity
               onPress={generarOrden}
               style={styles.button}

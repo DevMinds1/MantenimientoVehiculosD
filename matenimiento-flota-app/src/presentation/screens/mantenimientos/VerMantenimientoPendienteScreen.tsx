@@ -40,7 +40,6 @@ export const VerMantenimientoPendienteScreen = () => {
         "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_pending_orders"
       );
       const data = await response.json();
-      console.log("Ordenes pendientes:", data);
       setPendingOrders(data);
       setLoading(false);
     } catch (error) {

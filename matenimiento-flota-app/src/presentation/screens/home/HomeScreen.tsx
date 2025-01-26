@@ -11,10 +11,16 @@ import { globalStyles } from "../../theme/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ProgressBar } from "react-native-paper";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useUser } from "../../components/userAut/userContext";
 
 export const HomeScreen = () => {
+  const { user } = useUser();
   const navigation = useNavigation<NavigationProp<RootMenuParams>>();
   const { top } = useSafeAreaInsets();
+
+  if (!user) {
+    return <Text>No hay usuario autenticado.</Text>;
+  }
 
   return (
     <View style={globalStyles(top).container}>
@@ -30,7 +36,7 @@ export const HomeScreen = () => {
       </Pressable>
       <View style={styles.container}>
         {/* Header */}
-        <Text style={styles.welcomeText}>Bienvenido Henry</Text>
+        <Text style={styles.welcomeText}>Bienvenido {user.name}</Text>
         <Text style={styles.subtitleText}>Tu resumen de funcionalidad</Text>
 
         {/* Resumen Diario */}

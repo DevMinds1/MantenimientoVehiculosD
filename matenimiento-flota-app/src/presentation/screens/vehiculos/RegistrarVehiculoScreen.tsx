@@ -27,14 +27,36 @@ import * as ImagePicker from "expo-image-picker";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../../firebaseConfig";
 
 interface Encargado {
-  id: string;
+  uid: string;
   image_url: string;
   name: string;
   role: string;
   email: string;
 }
+
+type FormData = {
+  actividadUbicacion: string;
+  anio: string;
+  chasis: string;
+  color: string;
+  combustible: string;
+  detalle: string;
+  marca: string;
+  modeloAnio: string;
+  motor: string;
+  num: string;
+  placa: string;
+  propiedad: string;
+  responsable: string;
+  tipo: string;
+  imagen: string;
+  tipoVehiculo: "LIVIANO" | "PESADO";
+};
+
 export const RegistrarVehiculoScreen = () => {
   const { top } = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
@@ -194,6 +216,22 @@ export const RegistrarVehiculoScreen = () => {
   };
 
   //---------------------------------------
+
+  const uploadImageToFirebase = async (imageUri: string): Promise<string> => {
+    try {
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      const imageName = imageUri.substring(imageUri.lastIndexOf("/") + 1);
+      const storageRef = ref(storage, `vehicles/${imageName}`);
+      await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading image to Firebase:", error);
+      throw error;
+    }
+  };
+  
   const handleSubmit = async () => {
     if (
       !actividadUbicacion ||
@@ -210,59 +248,47 @@ export const RegistrarVehiculoScreen = () => {
       !propiedad ||
       !encargadoSeleccionado ||
       !tipo ||
-      (!light && !heavy)
+      (!light && !heavy) ||
+      !imagen
     ) {
       alert("Por favor, complete todos los campos, son obligatorios.");
       return;
     }
 
-    const extension = imagen.split(".").pop()?.toLowerCase();
-    let mimeType = "image/jpeg";
-
-    if (extension === "png") {
-      mimeType = "image/png";
-    } else if (extension === "jpg" || extension === "jpeg") {
-      mimeType = "image/jpeg";
-    } else {
-      alert(
-        "Formato de imagen no soportado. Solo se permiten archivos JPG o PNG."
-      );
-      return;
-    }
-
-    const formData = new FormData();
-
-    formData.append("image", {
-      uri: imagen,
-      type: mimeType,
-      name: imagen.substring(imagen.lastIndexOf("/") + 1),
-    } as any);
-
-    formData.append("actividadUbicacion", actividadUbicacion);
-    formData.append("anio", anio);
-    formData.append("chasis", chasis);
-    formData.append("color", color);
-    formData.append("combustible", combustible);
-    formData.append("detalle", detalle);
-    formData.append("marca", marca);
-    formData.append("modeloAnio", modeloAnio);
-    formData.append("motor", motor);
-    formData.append("num", num);
-    formData.append("placa", placa);
-    formData.append("propiedad", propiedad);
-    formData.append("responsable", encargadoSeleccionado?.name || "");
-    formData.append("tipo", tipo);
-    formData.append("tipoVehiculo", light ? "LIVIANO" : "PESADO");
-
     try {
+      // Sube la imagen a Firebase
+      const imageURL = await uploadImageToFirebase(imagen);
+
+      // Prepara los datos del formulario
+      const formData: FormData = {
+        actividadUbicacion,
+        anio,
+        chasis,
+        color,
+        combustible,
+        detalle,
+        marca,
+        modeloAnio,
+        motor,
+        num,
+        placa,
+        propiedad,
+        responsable: encargadoSeleccionado?.uid || "",
+        tipo,
+        imagen,
+        tipoVehiculo: light ? "LIVIANO" : "PESADO"
+      };
+
+      console.log("Datos del formulario:", formData);
+      // Envía los datos al servidor
       const response = await fetch(
         "https://us-central1-global-tine-447000-u6.cloudfunctions.net/vehicles/api/register_vehicle",
         {
           method: "POST",
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
           },
-          body: formData,
+          body: JSON.stringify(formData),
         }
       );
 
@@ -473,13 +499,13 @@ export const RegistrarVehiculoScreen = () => {
             >
               {filteredEncargado.map((item) => (
                 <TouchableOpacity
-                  key={item.id ? item.id : Math.random()}
+                  key={item.uid ? item.uid : Math.random()}
                   onPress={() => setEncargadoSeleccionado(item)}
                 >
                   <View
                     style={[
                       styles.card,
-                      encargadoSeleccionado?.id === item.id &&
+                      encargadoSeleccionado?.uid === item.uid &&
                         styles.selectedCard,
                     ]}
                   >
@@ -556,8 +582,8 @@ export const RegistrarVehiculoScreen = () => {
           ref={sheetRef}
           snapPoints={snapPoints}
           enablePanDownToClose={true}
-          onClose={closeSheet} // Cambia el estado a cerrado
-          onChange={handleSheetChange} // Cambia `isOpen` según el índice actual
+          onClose={closeSheet}
+          onChange={handleSheetChange} 
         >
           <BottomSheetView>
             <View

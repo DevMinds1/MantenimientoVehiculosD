@@ -16,10 +16,12 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import { StackScreenProps } from "@react-navigation/stack";
 import { RootStackParams } from "../../routes/StackNavigator";
 import axios from "axios";
+import { useUser } from "../../components/userAut/userContext";
 
 interface Props extends StackScreenProps<RootStackParams, "LoginScreen"> {}
 
 export const LoginScreen = ({ navigation }: Props) => {
+  const { setUser } = useUser();
   const { height } = useWindowDimensions();
   const [isRemembered, setIsRemembered] = useState(false);
   const [email, setEmail] = useState("");
@@ -50,10 +52,19 @@ export const LoginScreen = ({ navigation }: Props) => {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // Aquí imprimimos los datos de la respuesta
-      console.log("Datos del usuario:", response.data);
+      // Aquí almacenamos los datos del usuario en el contexto global
+      setUser({
+        email: response.data.usuario.email,
+        imageUrl: response.data.usuario.image_url,
+        name: response.data.usuario.name,
+        role: response.data.usuario.role,
+        uid: response.data.usuario.uid,
+      });
 
-      navigation.navigate("HomeStack");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "HomeStack" }],
+      });
     } catch (err) {
       if (axios.isAxiosError(err)) {
         if (err.response?.status === 401) {
@@ -143,15 +154,14 @@ export const LoginScreen = ({ navigation }: Props) => {
               <Text style={styles.buttonText}>Iniciar Sesión</Text>
             </TouchableOpacity>
           </View>
-
-       {/*    <View style={styles.buttonContainer}>
+          <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.button}
               onPress={() => navigation.navigate("HomeStack")}
             >
-              <Text>Pruebas</Text>
+              <Text style={styles.buttonText}> Pruebas</Text>
             </TouchableOpacity>
-          </View> */}
+          </View>
         </ScrollView>
       </View>
     </GestureHandlerRootView>

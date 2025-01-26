@@ -28,6 +28,7 @@ import { MantenimientoCorrectivoScreen } from "../screens/mantenimientos/Manteni
 import { MantenimientoPreventivoScreen } from "../screens/mantenimientos/MantenimientoPreventivoScreen";
 import { DetalleMantenimeintoScreen } from "../screens/mantenimientos/DetalleMantenimeintoScreen";
 import { CompletadoMantenimeinto } from "../screens/mantenimientos/CompletadoMantenimeinto";
+import { useUser } from "../components/userAut/userContext";
 
 const Drawer = createDrawerNavigator();
 
@@ -38,8 +39,8 @@ export type RootMenuParams = {
   VehiculosLivianos: undefined;
   MiMecanicaScreen: undefined;
   MiConsecionarioScreen: undefined;
-  DetalleMantenimeintoScreen : {params: {id: string , faults: string[]}};
-  CompletadoMantenimeinto : {params: {id: string , faults: string[]}};
+  DetalleMantenimeintoScreen: { params: { id: string; faults: string[] } };
+  CompletadoMantenimeinto: { params: { id: string; faults: string[] } };
 };
 
 export const SideMenuNavigator = () => {
@@ -57,24 +58,55 @@ export const SideMenuNavigator = () => {
       }}
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
-      <Drawer.Screen name="RegistrarVehiculo" component={RegistrarVehiculoScreen} />
+      <Drawer.Screen
+        name="RegistrarVehiculo"
+        component={RegistrarVehiculoScreen}
+      />
       <Drawer.Screen name="MisVehiculos" component={MisVehiculoScreen} />
-      <Drawer.Screen name="VehiculosLivianos" component={MisVehiculosLivianosScreen} />
+      <Drawer.Screen
+        name="VehiculosLivianos"
+        component={MisVehiculosLivianosScreen}
+      />
       <Drawer.Screen name="MiMecanicaScreen" component={MiMecanicaScreen} />
-      <Drawer.Screen name="MiConsecionarioScreen" component={MiConsecionarioScreen} />
+      <Drawer.Screen
+        name="MiConsecionarioScreen"
+        component={MiConsecionarioScreen}
+      />
       <Drawer.Screen name="Talleres" component={RegistrarTallerScreen} />
-      <Drawer.Screen name="MantenimientosCorrectivos" component={MantenimientoCorrectivoScreen} />
-      <Drawer.Screen name="MantenimientosPreventivos" component={MantenimientoPreventivoScreen} />
-      <Drawer.Screen name="MantenimientosPendientes" component={VerMantenimientoPendienteScreen} />
-      <Drawer.Screen name="MantenimientosCompletados" component={VerMantenimientoCompletadoScreen} />
-      <Drawer.Screen name="DetalleMantenimeinto" component={DetalleMantenimeintoScreen} />
-      <Drawer.Screen name="CompletadoMantenimeinto" component={CompletadoMantenimeinto} />
+      <Drawer.Screen
+        name="MantenimientosCorrectivos"
+        component={MantenimientoCorrectivoScreen}
+      />
+      <Drawer.Screen
+        name="MantenimientosPreventivos"
+        component={MantenimientoPreventivoScreen}
+      />
+      <Drawer.Screen
+        name="MantenimientosPendientes"
+        component={VerMantenimientoPendienteScreen}
+      />
+      <Drawer.Screen
+        name="MantenimientosCompletados"
+        component={VerMantenimientoCompletadoScreen}
+      />
+      <Drawer.Screen
+        name="DetalleMantenimeinto"
+        component={DetalleMantenimeintoScreen}
+      />
+      <Drawer.Screen
+        name="CompletadoMantenimeinto"
+        component={CompletadoMantenimeinto}
+      />
       <Drawer.Screen name="Perfil" component={PerfilScreen} />
     </Drawer.Navigator>
   );
 };
 
 const CustomDrawerContent = (props: DrawerContentComponentProps) => {
+  const { user } = useUser();
+  if (!user) {
+    return <Text>No hay usuario autenticado.</Text>;
+  }
   const [vehiculoOpen, setVehiculoOpen] = useState(false);
   const [tallerOpen, setTallerOpen] = useState(false);
   const [mantenimientoOpen, setmantenimientoOpen] = useState(false);
@@ -126,9 +158,9 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       >
         <Image
           source={{
-            uri: "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/me%201.png?raw=true",
+            uri: user.imageUrl,
           }}
-          style={{ width: "100%", height: "100%" }}
+          style={{ width: "100%", height: "100%", borderRadius: 100 }}
         />
       </View>
       <Text
@@ -141,7 +173,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
           marginBottom: 10,
         }}
       >
-        Henry, Arthur
+        {user.name}
       </Text>
       <Text
         style={{
@@ -153,7 +185,11 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
           marginBottom: 20,
         }}
       >
-        Administrador
+        {user.role === "admin"
+          ? "Administrador"
+          : user.role === "mandated"
+          ? "Encargado"
+          : "Otro Rol"}
       </Text>
 
       <View
@@ -169,7 +205,6 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         label="Inicio"
         icon={() => <Ionicons name="home-outline" size={24} color="#A0A0A0" />}
         onPress={() => closeDrawerAndNavigateUno("Home")}
-        
       />
 
       <DrawerItem
@@ -180,12 +215,14 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
       {vehiculoOpen && (
         <>
-          <DrawerItem
-            label="Registrar Vehículo"
-            style={{ marginLeft: "15%" }}
-            icon={() => <Ionicons name="ellipse" size={7} color="#A0A0A0" />}
-            onPress={() => closeDrawerAndNavigateUno("RegistrarVehiculo")}
-          />
+          {user.role !== "mandated" && (
+            <DrawerItem
+              label="Registrar Vehículo"
+              style={{ marginLeft: "15%" }}
+              icon={() => <Ionicons name="ellipse" size={7} color="#A0A0A0" />}
+              onPress={() => closeDrawerAndNavigateUno("RegistrarVehiculo")}
+            />
+          )}
           <DrawerItem
             label="Mis Vehículos"
             style={{ marginLeft: "15%" }}
@@ -194,15 +231,15 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
           />
         </>
       )}
-
-      <DrawerItem
-        label="Talleres"
-        onPress={toggleTallerMenu}
-        icon={() => (
-          <MaterialCommunityIcons name="car-key" size={24} color="#A0A0A0" />
-        )}
-      />
-
+      {user.role !== "mandated" && (
+        <DrawerItem
+          label="Talleres"
+          onPress={toggleTallerMenu}
+          icon={() => (
+            <MaterialCommunityIcons name="car-key" size={24} color="#A0A0A0" />
+          )}
+        />
+      )}
       {tallerOpen && (
         <>
           <DrawerItem
@@ -219,14 +256,15 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
           />
         </>
       )}
-
-      <DrawerItem
-        label="Mantenimientos"
-        onPress={toggleMantenimientoMenu}
-        icon={() => (
-          <FontAwesome6 name="screwdriver-wrench" size={24} color="#A0A0A0" />
-        )}
-      />
+      {user.role !== "mandated" && (
+        <DrawerItem
+          label="Mantenimientos"
+          onPress={toggleMantenimientoMenu}
+          icon={() => (
+            <FontAwesome6 name="screwdriver-wrench" size={24} color="#A0A0A0" />
+          )}
+        />
+      )}
 
       {mantenimientoOpen && (
         <>
@@ -234,13 +272,17 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
             label="Preventivo"
             style={{ marginLeft: "15%" }}
             icon={() => <Ionicons name="ellipse" size={7} color="#A0A0A0" />}
-            onPress={() => closeDrawerAndNavigateUno("MantenimientosPreventivos")}
+            onPress={() =>
+              closeDrawerAndNavigateUno("MantenimientosPreventivos")
+            }
           />
           <DrawerItem
             label="Correctivo"
             style={{ marginLeft: "15%" }}
             icon={() => <Ionicons name="ellipse" size={7} color="#A0A0A0" />}
-            onPress={() => closeDrawerAndNavigateUno("MantenimientosCorrectivos")}
+            onPress={() =>
+              closeDrawerAndNavigateUno("MantenimientosCorrectivos")
+            }
           />
         </>
       )}
@@ -253,6 +295,3 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
     </DrawerContentScrollView>
   );
 };
-
-
-

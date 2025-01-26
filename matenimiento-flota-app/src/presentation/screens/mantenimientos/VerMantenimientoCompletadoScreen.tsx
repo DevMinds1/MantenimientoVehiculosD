@@ -9,7 +9,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
-import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation/native";
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from "@react-navigation/native";
 import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
 
 interface Order {
@@ -27,7 +31,7 @@ interface Order {
 
 export const VerMantenimientoCompletadoScreen = () => {
   const { top } = useSafeAreaInsets();
-   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
+  const navigation = useNavigation<NavigationProp<RootButtonParams>>();
 
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +49,28 @@ export const VerMantenimientoCompletadoScreen = () => {
       setLoading(false);
     }
   };
+/*   const ApiKey =
+    "eyJraWQiOiJnYXRld2F5X2NlcnRpZmljYXRlX2FsaWFzIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJhZG1pbkBjYXJib24uc3VwZXIiLCJhdWQiOiJiMGIzMjcyYy0xNzZhLTQzNTEtYTAyMS1lODYzMzIwYzFlZTkiLCJpc3MiOiJodHRwczovLzM0LjQ0LjEyMy45ODo5NDQzL29hdXRoMi90b2tlbiIsImtleXR5cGUiOiJQUk9EVUNUSU9OIiwic3Vic2NyaWJlZEFQSXMiOlt7Im5hbWUiOiJ2ZWhpY2xlcyIsImNvbnRleHQiOiIvdmVoaWNsZXMvMS4wLjAiLCJ2ZXJzaW9uIjoiMS4wLjAiLCJwdWJsaXNoZXIiOiJhZG1pbiIsInN1YnNjcmlwdGlvblRpZXIiOm51bGwsInN1YnNjcmliZXJUZW5hbnREb21haW4iOm51bGx9XSwiZXhwIjoxNzM3OTI1MDAxLCJ0b2tlbl90eXBlIjoiSW50ZXJuYWxLZXkiLCJpYXQiOjE3Mzc4NjUwMDEsImp0aSI6IjM1ZDQwNTI3LWQ5NDQtNDI0MS1hMDJiLTVmMzZlOWY0OGFlYiJ9.DvFLHCMwkD-_C-o3tD2Pm9G-LaYhe8Yn9IAM3cX6PdMcVchqS977MwtcO3OxjQslXyBEVybYOOq4SpW-HP0xqihP_gDBrt1arVtlvjt4ndV4BSRDvWifniu_zlXixdayBRO-cqZ9XZ2N5CeOswXVvqAKex5J0f1QGPC07zclBhWaLaeSXJ_8-kIRB6b6mtKcuQ2gTwQmjX-Z6xtfu1nZfnrgSYAiqrg_8tfjLSYhgnHalAI3UK_ZFnv-BtbWnDvi_IqKgzWGjG6QcoIF2XNcbhQapm_O6L5oFydtmcMVgQg3MigTGGg5iD9zchCNK1Fnbzc_AZ3f4-eXwUf3q-TAKw";
+  const fetchPendingOrders = async () => {
+    try {
+      const response = await fetch(
+        "https://34.44.123.98:8243/vehicles/1.0.0/api/get_vehicles",
+        {
+          method: "GET", 
+          headers: {
+            "Internal-Key": `${ApiKey}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      setPendingOrders(data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error al obtener órdenes pendientes:", error);
+      setLoading(false);
+    }
+  }; */
 
   useFocusEffect(
     useCallback(() => {
@@ -67,12 +93,15 @@ export const VerMantenimientoCompletadoScreen = () => {
           data={pendingOrders}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card}  onPress={() =>
-              navigation.navigate("HomeTab", {
-                screen: "CompletadoMantenimeinto",
-                params: { id: item.id , faults: item.faults },
-              })
-            }>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() =>
+                navigation.navigate("HomeTab", {
+                  screen: "CompletadoMantenimeinto",
+                  params: { id: item.id, faults: item.faults },
+                })
+              }
+            >
               {/*   <SimpleLineIcons name="eye" size={24} color="black" /> */}
               <Text style={styles.title}>Mantenimiento {item.type}</Text>
               <Text style={styles.label}>
@@ -94,8 +123,7 @@ export const VerMantenimientoCompletadoScreen = () => {
                 Vehículo: <Text style={styles.value}>{item.vehicle}</Text>
               </Text>
               <Text style={styles.label}>
-                Valor Cancelado:{" "}
-                <Text style={styles.value}>$60</Text>{" "}
+                Valor Cancelado: <Text style={styles.value}>$60</Text>{" "}
               </Text>
             </TouchableOpacity>
           )}

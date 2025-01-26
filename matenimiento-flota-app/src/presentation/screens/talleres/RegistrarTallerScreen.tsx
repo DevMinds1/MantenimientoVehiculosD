@@ -21,6 +21,17 @@ import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../../firebaseConfig";
+// Define los tipos del formulario
+type FormData = {
+  name: string;
+  address: string;
+  phone: string;
+  city: string;
+  type: string;
+  image: string;
+};
 
 export const RegistrarTallerScreen = () => {
   const { top } = useSafeAreaInsets();
@@ -133,6 +144,22 @@ export const RegistrarTallerScreen = () => {
 
   //---------------------------------------
 
+  // Define los tipos de las funciones
+  const uploadImageToFirebase = async (imageUri: string): Promise<string> => {
+    try {
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      const imageName = imageUri.substring(imageUri.lastIndexOf("/") + 1);
+      const storageRef = ref(storage, `repairshops/${imageName}`);
+      await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading image to Firebase:", error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async () => {
     if (
       !name ||
@@ -145,51 +172,40 @@ export const RegistrarTallerScreen = () => {
       alert("Por favor, complete todos los campos, son obligatorios.");
       return;
     }
-  
-    const extension = imagen.split('.').pop()?.toLowerCase();
-    let mimeType = "image/jpeg";
-  
-    if (extension === "png") {
-      mimeType = "image/png";
-    } else if (extension === "jpg" || extension === "jpeg") {
-      mimeType = "image/jpeg";
-    } else {
-      alert("Formato de imagen no soportado. Solo se permiten archivos JPG o PNG.");
-      return;
-    }
-  
-    const formData = new FormData();
-  
-    formData.append("image", {
-      uri: imagen,
-      type: mimeType,
-      name: imagen.substring(imagen.lastIndexOf('/') + 1),
-    } as any);
-  
-    formData.append("name", name);
-    formData.append("address", address);
-    formData.append("phone", phone);
-    formData.append("city", city);
-    formData.append("type", mechanic ? "Mecánica" : "Concesionario");
-  
+
     try {
+      // Sube la imagen a Firebase
+      const imageURL = await uploadImageToFirebase(imagen);
+
+      // Prepara los datos del formulario
+      const formData: FormData = {
+        name,
+        address,
+        phone,
+        city,
+        type: mechanic ? "Mecánica" : "Concesionario",
+        image: imageURL,
+      };
+
+      console.log("Datos del formulario:", formData);
+      // Envía los datos al servidor
       const response = await fetch(
         "https://us-central1-global-tine-447000-u6.cloudfunctions.net/repairshops/api/register_repairshop",
         {
           method: "POST",
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
           },
-          body: formData,
+          body: JSON.stringify(formData),
         }
       );
-  
+
       const data = await response.json();
       if (response.ok) {
         alert(data.message);
-  
+
         navigation.navigate("HomeTab", { screen: "MiMecanicaScreen" });
-  
+
         resetFields();
       } else {
         alert("Error: " + data.message);

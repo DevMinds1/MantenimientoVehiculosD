@@ -12,11 +12,19 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ProgressBar } from "react-native-paper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useUser } from "../../components/userAut/userContext";
+import { RootStackParams } from "../../routes/StackNavigator";
 
 export const HomeScreen = () => {
-  const { user } = useUser();
+  const { user, logout } = useUser();
   const navigation = useNavigation<NavigationProp<RootMenuParams>>();
+  const navigationlog = useNavigation<NavigationProp<RootStackParams>>();
   const { top } = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (!user) {
+      navigationlog.navigate("LoginScreen");
+    }
+  }, [user, navigation]);
 
   if (!user) {
     return <Text>No hay usuario autenticado.</Text>;
@@ -24,16 +32,27 @@ export const HomeScreen = () => {
 
   return (
     <View style={globalStyles(top).container}>
-      <Pressable
-        onPress={() => navigation.dispatch(DrawerActions.toggleDrawer)}
-      >
-        <Ionicons
-          name="menu-outline"
-          size={32}
-          color="#004270"
-          style={styles.iconStyle}
-        />
-      </Pressable>
+      <View style = {styles.containerMenus}>
+        <Pressable
+          onPress={() => navigation.dispatch(DrawerActions.toggleDrawer)}
+        >
+          <Ionicons
+            name="menu-outline"
+            size={32}
+            color="#004270"
+            style={styles.iconStyle}
+          />
+        </Pressable>
+        <Pressable onPress={logout}>
+          <Ionicons
+            name="log-out-outline"
+            size={28}
+            color="#004270"
+            style={styles.iconStyle}
+          />
+        </Pressable>
+      </View>
+
       <View style={styles.container}>
         {/* Header */}
         <Text style={styles.welcomeText}>Bienvenido {user.name}</Text>
@@ -100,7 +119,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-
   },
   welcomeText: {
     fontSize: 24,
@@ -192,4 +210,8 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 250,
   },
+  containerMenus:{
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  }
 });

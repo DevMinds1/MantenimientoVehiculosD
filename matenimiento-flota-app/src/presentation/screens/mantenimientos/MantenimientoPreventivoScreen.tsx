@@ -174,6 +174,7 @@ export const MantenimientoPreventivoScreen = () => {
         responseConcesionario,
         responseMecanica,
         responseEncargado,
+        responseOrdenesPendientes,
       ] = await Promise.all([
         fetch(
           "https://us-central1-global-tine-447000-u6.cloudfunctions.net/vehicles/api/get_light_vehicles"
@@ -190,6 +191,7 @@ export const MantenimientoPreventivoScreen = () => {
         fetch(
           "https://us-central1-global-tine-447000-u6.cloudfunctions.net/users/api/get_mandated_users"
         ),
+        fetch("https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_pending_orders"),
       ]);
 
       const vehiculosLivianos = await responseLivianos.json();
@@ -197,12 +199,22 @@ export const MantenimientoPreventivoScreen = () => {
       const consecionario = await responseConcesionario.json();
       const mecanica = await responseMecanica.json();
       const encargado = await responseEncargado.json();
+      const ordenesPendientes = await responseOrdenesPendientes.json();
 
-      setVehiculos([...vehiculosLivianos, ...vehiculosPesados]);
+      const placasEnMantenimiento = ordenesPendientes.map(
+        (orden: { vehicle: any }) => orden.vehicle
+      );
+
+      const vehiculosFiltrados = [
+        ...vehiculosLivianos,
+        ...vehiculosPesados,
+      ].filter((vehiculo) => !placasEnMantenimiento.includes(vehiculo.PLACA));
+
+      setVehiculos(vehiculosFiltrados);
       setTalleres([...consecionario, ...mecanica]);
       setEncargados([...encargado]);
     } catch (error) {
-      console.error("Error al obtener los Datos:", error);
+      console.error("Error al obtener los datos:", error);
     }
   };
 
@@ -623,7 +635,7 @@ export const MantenimientoPreventivoScreen = () => {
             <ScrollView style={styles.scrollContainerEncargado}>
               {filteredEncargado.map((item) => (
                 <TouchableOpacity
-                  key={item.uid ? item.uid : Math.random()} 
+                  key={item.uid ? item.uid : Math.random()}
                   onPress={() => setEncargadoSeleccionado(item)}
                 >
                   <View

@@ -11,15 +11,21 @@ interface User {
 interface UserContextType {
   user: User | null;
   setUser: (user: User) => void;
+  logout: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  
+
+  const logout = () => {
+    setUser(null); 
+  };
 
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, logout  }}>
       {children}
     </UserContext.Provider>
   );

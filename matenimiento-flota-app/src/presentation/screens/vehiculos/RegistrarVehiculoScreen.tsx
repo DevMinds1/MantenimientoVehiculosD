@@ -231,7 +231,7 @@ export const RegistrarVehiculoScreen = () => {
       throw error;
     }
   };
-  
+
   const handleSubmit = async () => {
     if (
       !actividadUbicacion ||
@@ -275,8 +275,8 @@ export const RegistrarVehiculoScreen = () => {
         propiedad,
         responsable: encargadoSeleccionado?.uid || "",
         tipo,
-        imagen,
-        tipoVehiculo: light ? "LIVIANO" : "PESADO"
+        imagen: imageURL,
+        tipoVehiculo: light ? "LIVIANO" : "PESADO",
       };
 
       console.log("Datos del formulario:", formData);
@@ -583,7 +583,7 @@ export const RegistrarVehiculoScreen = () => {
           snapPoints={snapPoints}
           enablePanDownToClose={true}
           onClose={closeSheet}
-          onChange={handleSheetChange} 
+          onChange={handleSheetChange}
         >
           <BottomSheetView>
             <View

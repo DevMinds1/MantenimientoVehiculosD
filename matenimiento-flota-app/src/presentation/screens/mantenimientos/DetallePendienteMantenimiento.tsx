@@ -29,12 +29,17 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { ScrollView } from "react-native-gesture-handler";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../../firebaseConfig";
+import * as DocumentPicker from "expo-document-picker";
 import { Order } from "../../../interface/repairshop";
+import { useUser } from "../../components/userAut/userContext";
 
-export const CompletadoMantenimeinto = () => {
+export const DetallePendienteMantenimeintoScreen = () => {
   const { top } = useSafeAreaInsets();
   const route = useRoute();
-  const { id, faults, state, order } = route.params as {
+    const { user } = useUser();
+  const { id, faults, state , order} = route.params as {
     id: string;
     faults: string[];
     state: string;
@@ -47,6 +52,8 @@ export const CompletadoMantenimeinto = () => {
   const [tabTaller, setTabTaller] = useState<"Mecánica" | "Concesionario">(
     "Mecánica"
   );
+  const [showFallas, setShowFallas] = useState(false);
+  const [imagen, setimagen] = useState("");
 
   const fallasConId = useMemo(() => {
     if (Array.isArray(faults)) {
@@ -57,25 +64,64 @@ export const CompletadoMantenimeinto = () => {
       return mappedFallas;
     }
 
-    console.log("No se encontraron fallas");
+    console.log("No se encontraron fallas o fallas no es un arreglo válido.");
     return [];
   }, [faults]);
 
-  useEffect(() => {
-    const ids = fallasConId.map((item) => item.id);
-    setFallasSeleccionadas(ids);
-  }, [fallasConId]);
-
   const toggleFalla = (fallaId: string) => {
-    setFallasSeleccionadas((prev) =>
-      prev.includes(fallaId)
-        ? prev.filter((id) => id !== fallaId)
-        : [...prev, fallaId]
-    );
+    if (state !== "Pendiente") {
+      setFallasSeleccionadas((prev) =>
+        prev.includes(fallaId)
+          ? prev.filter((id) => id !== fallaId)
+          : [...prev, fallaId]
+      );
+    }
+  };
+
+  useEffect(() => {
+    // Asegúrate de deseleccionar todas las fallas cuando el estado es "Pendiente"
+    if (state === "Pendiente") {
+      setFallasSeleccionadas([]); // Desmarcar todas las casillas cuando el estado es "Pendiente"
+    }
+  }, [state]);
+
+  const handleButtonPress = (buttonType: string) => {
+    if (buttonType === "VehiculoEnTaller") {
+      setShowFallas(true);
+      updateOrder();
+      alert("Vehiculo en Taller registrado exitosamente");
+      navigation.navigate("Mantenimientos", { screen: "Taller" });
+    } else if (buttonType === "MantenimientoCorrecto") {
+    }
+  };
+
+  const updateOrder = async () => {
+    try {
+      const response = await fetch(
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/update_order",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id, state: "En Taller" }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error actualizando la orden:", error);
+      alert("Hubo un problema al actualizar la orden.");
+    }
   };
 
   return (
-    <ScrollView>
+    <ScrollView style={{ backgroundColor: "#fff" }}>
       <View style={globalStyles(top).container}>
         <View style={styles.containerTitle}>
           <SimpleLineIcons
@@ -85,7 +131,7 @@ export const CompletadoMantenimeinto = () => {
             style={styles.iconStyle}
             onPress={() => navigation.navigate("Mantenimientos")}
           />
-          <Text style={styles.title}>Detalle Mantenimiento Com</Text>
+          <Text style={styles.title}>Detalle Pendiente</Text>
         </View>
 
         <View style={styles.containerImg}>
@@ -100,15 +146,11 @@ export const CompletadoMantenimeinto = () => {
         <View style={styles.containerInfo}>
           <Text style={styles.subtitle}>Vehículo</Text>
           <Text style={styles.textoInfo}>
-            {order.vehicleMarca} ({order.vehicle})
+             {order.vehicleMarca} ({order.vehicle})
           </Text>
-          <Text style={styles.textoInfo}>Motor: {order.vehicleMotor}</Text>
-          <Text style={styles.textoInfo}>
-            Tipo: {order.vehicleTipo} ({order.vehicleTipoVehi}){" "}
-          </Text>
-          <Text style={styles.textoInfo}>
-            Propiedad: {order.vehiclePropiedad}
-          </Text>
+          <Text style={styles.textoInfo}>Motor:  {order.vehicleMotor}</Text>
+          <Text style={styles.textoInfo}>Tipo: {order.vehicleTipo} ({order.vehicleTipoVehi}) </Text>
+          <Text style={styles.textoInfo}>Propiedad: {order.vehiclePropiedad}</Text>
           <Text style={styles.subtitle}>Encargado</Text>
           <Text style={styles.textoInfo}>Nombre: {order.mandatedName}</Text>
           <Text style={styles.textoInfo}>Email: {order.mandatedEmail}</Text>
@@ -120,14 +162,14 @@ export const CompletadoMantenimeinto = () => {
         <View style={styles.section}>
           <View style={styles.tabs}>
             <View style={{ width: "100%", alignItems: "center" }}>
-              <Text style={styles.activeTab}>Fallas</Text>
+              <Text style={styles.activeTab}>Verificaciones</Text>
               {tabTaller === "Mecánica" && (
                 <View
                   style={{
                     height: 4,
                     backgroundColor: "#FEBE10",
                     marginVertical: 2,
-                    width: "30%",
+                    width: "60%",
                   }}
                 ></View>
               )}
@@ -146,28 +188,14 @@ export const CompletadoMantenimeinto = () => {
             {fallasConId.length > 0 ? (
               fallasConId.map((item) => (
                 <View key={item.id} style={styles.checkboxContainerFallas}>
-                  <View
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderWidth: 2,
-                      borderColor: "#F2B705", // Borde amarillo
-                      backgroundColor: fallasSeleccionadas.includes(item.id)
-                        ? "#F2B705"
-                        : "#EEE", // Fondo amarillo si seleccionado, gris si no
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {fallasSeleccionadas.includes(item.id) && (
-                      <MaterialCommunityIcons
-                        name="check"
-                        size={16}
-                        color="#FFF"
-                      />
-                    )}
-                  </View>
-
+                  <Checkbox
+                    value={fallasSeleccionadas.includes(item.id)}
+                    onValueChange={() => toggleFalla(item.id)}
+                    color={
+                      fallasSeleccionadas.includes(item.id) ? "#F2B705" : "#CCC"
+                    }
+                    disabled={state === "Pendiente"} // Deshabilitar si el estado es "Pendiente"
+                  />
                   <Text style={styles.descriptionCheck}>
                     {item.descripcion}
                   </Text>
@@ -179,27 +207,25 @@ export const CompletadoMantenimeinto = () => {
           </View>
         </View>
         {order.type == "Correctivo" && (
-          <View style={styles.containerInfo}>
-            <Text style={styles.subtitle}>Observaciones</Text>
-            <Text style={styles.textoInfo}>{order.comments}</Text>
-          </View>
-        )}
         <View style={styles.containerInfo}>
-          <Text style={styles.subtitle}>
-            Valor Cancelado: <Text style={styles.textoInfo}> ${order.price}</Text>
-          </Text>
-          <View style={{ justifyContent: "center", alignItems: "center" }}>
-            <Text style={styles.textimg}>Factura</Text>
-            <View style={styles.contanierimg}>
-              <Image
-                source={{
-                  uri: order.url,
-                }}
-                style={{ width: "100%", height: "100%" }}
-              />
-            </View>
-          </View>
+          <Text style={styles.subtitle}>Observaciones</Text>
+          <Text style={styles.textoInfo}>{order.comments}</Text>
         </View>
+        )}
+        {user?.role == "mandated" && (
+        <View style={styles.sectionBottom}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleButtonPress("VehiculoEnTaller")}
+          >
+            <Text style={styles.textbutton}>Vehiculo En Taller</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.button2}>
+            <Text style={styles.textbutton}>Mantenimiento Correcto</Text>
+          </TouchableOpacity>
+        </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -237,6 +263,7 @@ const styles = StyleSheet.create({
   },
   containerInfo: {
     marginVertical: 5,
+
     width: "80%",
     marginHorizontal: "auto",
   },

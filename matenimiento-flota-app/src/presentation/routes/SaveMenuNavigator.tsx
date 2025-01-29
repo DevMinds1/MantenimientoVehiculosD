@@ -29,6 +29,7 @@ import { MantenimientoPreventivoScreen } from "../screens/mantenimientos/Manteni
 import { DetalleMantenimeintoScreen } from "../screens/mantenimientos/DetalleMantenimeintoScreen";
 import { CompletadoMantenimeinto } from "../screens/mantenimientos/CompletadoMantenimeinto";
 import { useUser } from "../components/userAut/userContext";
+import { DetallePendienteMantenimeintoScreen } from "../screens/mantenimientos/DetallePendienteMantenimiento";
 
 const Drawer = createDrawerNavigator();
 
@@ -39,6 +40,7 @@ export type RootMenuParams = {
   VehiculosLivianos: undefined;
   MiMecanicaScreen: undefined;
   MiConsecionarioScreen: undefined;
+  PendienteMantenimeinto: { params: { id: string; faults: string[] } };
   DetalleMantenimeintoScreen: { params: { id: string; faults: string[] } };
   CompletadoMantenimeinto: { params: { id: string; faults: string[] } };
 };
@@ -96,6 +98,10 @@ export const SideMenuNavigator = () => {
       <Drawer.Screen
         name="CompletadoMantenimeinto"
         component={CompletadoMantenimeinto}
+      />
+      <Drawer.Screen
+        name="PendienteMantenimeinto"
+        component={DetallePendienteMantenimeintoScreen}
       />
       <Drawer.Screen name="Perfil" component={PerfilScreen} />
     </Drawer.Navigator>

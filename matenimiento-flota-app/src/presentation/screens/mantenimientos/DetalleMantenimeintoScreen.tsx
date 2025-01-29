@@ -21,15 +21,21 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import Feather from "@expo/vector-icons/Feather";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { ScrollView } from "react-native-gesture-handler";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../../../../firebaseConfig";
+import * as DocumentPicker from "expo-document-picker";
+import { Order } from "../../../interface/repairshop";
 
 export const DetalleMantenimeintoScreen = () => {
   const { top } = useSafeAreaInsets();
   const route = useRoute();
-  const { id, faults } = route.params as {
+  const { id, faults, state, order } = route.params as {
     id: string;
     faults: string[];
+    state: string;
+    order: Order;
   };
 
   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
@@ -55,18 +61,68 @@ export const DetalleMantenimeintoScreen = () => {
   }, [faults]);
 
   const toggleFalla = (fallaId: string) => {
-    setFallasSeleccionadas((prev) =>
-      prev.includes(fallaId)
-        ? prev.filter((id) => id !== fallaId)
-        : [...prev, fallaId]
-    );
+    if (state !== "Pendiente") {
+      setFallasSeleccionadas((prev) =>
+        prev.includes(fallaId)
+          ? prev.filter((id) => id !== fallaId)
+          : [...prev, fallaId]
+      );
+    }
   };
 
   const handleButtonPress = (buttonType: string) => {
     if (buttonType === "VehiculoEnTaller") {
       setShowFallas(true);
+      updateOrder();
+      alert("Vehiculo en Taller registrado exitosamente");
+      navigation.navigate("Mantenimientos");
     } else if (buttonType === "MantenimientoCorrecto") {
+      if (fallasSeleccionadas.length !== fallasConId.length) {
+        alert("Por favor, Verifique todas las fallas.");
+        return;
+      }
+
+      if (!precio || precio.trim() === "") {
+        alert("Por favor, ingrese el valor a cancelar.");
+        return;
+      }
+
+      if (!imagen || imagen.trim() === "") {
+        alert("Por favor, suba la Factura.");
+        return;
+      }
+      setFallasSeleccionadas([]);
+      setimagen("");
+      setPrecio("");
       setShowFallas(false);
+      updateOrderCompleted();
+      alert("Oreden Completada exitosamente");
+      navigation.navigate("Mantenimientos", { screen: "Completados" });
+    }
+  };
+
+  //Subir Imagen a storage de Firebase
+  const uploadImageToFirebase = async (fileUri: string): Promise<string> => {
+    try {
+      const response = await fetch(fileUri);
+      const blob = await response.blob();
+
+      const fileName = fileUri.substring(fileUri.lastIndexOf("/") + 1);
+
+      const isPdf = fileName.toLowerCase().endsWith(".pdf");
+
+      const storagePath = isPdf
+        ? `orders/files/${fileName}`
+        : `orders/${fileName}`;
+      const storageRef = ref(storage, storagePath);
+
+      await uploadBytes(storageRef, blob);
+
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading file to Firebase:", error);
+      throw error;
     }
   };
 
@@ -88,6 +144,27 @@ export const DetalleMantenimeintoScreen = () => {
 
   const handleSheetChange = (index: number) => {
     setIsOpen(index !== -1);
+  };
+  //PDF
+  const handlePickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["application/pdf"],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled === false) {
+        const fileUri = result.assets[0].uri;
+        setimagen(fileUri);
+        setIsOpen(false);
+
+        console.log("Archivo seleccionado:", fileUri);
+      } else if (result.canceled === true) {
+        console.log("El usuario canceló la selección.");
+      }
+    } catch (error) {
+      console.error("Error al seleccionar el archivo:", error);
+    }
   };
 
   //Camara
@@ -137,8 +214,79 @@ export const DetalleMantenimeintoScreen = () => {
     }
   };
 
+  const updateOrder = async () => {
+    try {
+      const response = await fetch(
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/update_order",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id, state: "En Taller" }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error actualizando la orden:", error);
+      alert("Hubo un problema al actualizar la orden.");
+    }
+  };
+
+  const updateOrderCompleted = async () => {
+    try {
+      if (!imagen || !precio) {
+        alert("Por favor, suba una imagen y proporcione un precio.");
+        return;
+      }
+
+      const imageURL = await uploadImageToFirebase(imagen);
+
+      const response = await fetch(
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/update_order_completed",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id,
+            state: "Completada",
+            url: imageURL,
+            price: precio,
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok) {
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error actualizando la orden:", error);
+      alert("Hubo un problema al actualizar la orden.");
+    }
+  };
+
+  const handlePrecioChange = (text: string) => {
+    // Expresión regular para validar valores monetarios (números enteros o decimales con hasta dos decimales)
+    const regex = /^\d+(\.\d{0,2})?$/;
+
+    // Verificar si el texto coincide con el patrón o si está vacío
+    if (regex.test(text) || text === "") {
+      setPrecio(text); // Actualiza el valor del precio
+    }
+  };
+
   return (
-    <ScrollView>
+    <ScrollView style={{ backgroundColor: "#fff" }}>
       <View style={globalStyles(top).container}>
         <View style={styles.containerTitle}>
           <SimpleLineIcons
@@ -148,7 +296,7 @@ export const DetalleMantenimeintoScreen = () => {
             style={styles.iconStyle}
             onPress={() => navigation.navigate("Mantenimientos")}
           />
-          <Text style={styles.title}>Detalle Mantenimiento</Text>
+          <Text style={styles.title}>Detalle Mantenimiento en Taller</Text>
         </View>
 
         <View style={styles.containerImg}>
@@ -163,27 +311,34 @@ export const DetalleMantenimeintoScreen = () => {
         <View style={styles.containerInfo}>
           <Text style={styles.subtitle}>Vehículo</Text>
           <Text style={styles.textoInfo}>
-            Mercedes Benz Sprinter (LBA-9091)
+            {order.vehicleMarca} ({order.vehicle})
           </Text>
-          <Text style={styles.textoInfo}>Motor: 377989U0861011</Text>
-          <Text style={styles.textoInfo}>Responsable: GERMAN VIVANCO</Text>
-          <Text style={styles.textoInfo}>Propiedad: UTPL</Text>
+          <Text style={styles.textoInfo}>Motor: {order.vehicleMotor}</Text>
+          <Text style={styles.textoInfo}>
+            Tipo: {order.vehicleTipo} ({order.vehicleTipoVehi}){" "}
+          </Text>
+          <Text style={styles.textoInfo}>
+            Propiedad: {order.vehiclePropiedad}
+          </Text>
+          <Text style={styles.subtitle}>Encargado</Text>
+          <Text style={styles.textoInfo}>Nombre: {order.mandatedName}</Text>
+          <Text style={styles.textoInfo}>Email: {order.mandatedEmail}</Text>
           <Text style={styles.subtitle}>Taller</Text>
-          <Text style={styles.textoInfo}>Concesionaria Grupo Mavesa</Text>
-          <Text style={styles.textoInfo}>0988168795</Text>
+          <Text style={styles.textoInfo}>{order.repairshopName}</Text>
+          <Text style={styles.textoInfo}>{order.repairshopAddress}</Text>
         </View>
 
         <View style={styles.section}>
           <View style={styles.tabs}>
             <View style={{ width: "100%", alignItems: "center" }}>
-              <Text style={styles.activeTab}>Fallas</Text>
+              <Text style={styles.activeTab}>Verificaciones</Text>
               {tabTaller === "Mecánica" && (
                 <View
                   style={{
                     height: 4,
                     backgroundColor: "#FEBE10",
                     marginVertical: 2,
-                    width: "30%",
+                    width: "60%",
                   }}
                 ></View>
               )}
@@ -218,66 +373,59 @@ export const DetalleMantenimeintoScreen = () => {
               <Text>No hay fallas disponibles</Text>
             )}
           </View>
+          {order.type == "Correctivo" && (
+            <View style={styles.containerInfo}>
+              <Text style={styles.subtitle}>Observaciones</Text>
+              <Text style={styles.textoInfo}>{order.comments}</Text>
+            </View>
+          )}
         </View>
-        {showFallas ? (
-          <View>
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>Valor a cancelar:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ingrese el valor a cancelar"
-                value={precio}
-                onChangeText={setPrecio}
-              />
-            </View>
-            <View style={{ justifyContent: "center", alignItems: "center" }}>
-              <Text style={styles.textimg}>Subir Factura</Text>
-              <View style={styles.contanierimg}>
-                {imagen ? (
-                  <TouchableOpacity
-                    style={styles.image}
-                    onPress={() => handleSnapPress()}
-                  >
-                    <Image source={{ uri: imagen }} style={styles.image} />
-                  </TouchableOpacity>
-                ) : (
-                  <MaterialCommunityIcons
-                    name="file-image-plus-outline"
-                    size={90}
-                    color="black"
-                    style={styles.iconStyleimg}
-                    onPress={() => handleSnapPress()}
-                  />
-                )}
-              </View>
-            </View>
-            <View style={styles.sectionBottom}>
-              <TouchableOpacity style={styles.button3}>
-                <Text style={styles.textbutton2}>Informar Fallas</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.navigate("Mantenimientos")}
-              >
-                <Text style={styles.textbutton}>Mantenimiento Correcto</Text>
-              </TouchableOpacity>
+        <View>
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Valor a cancelar:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ingrese el valor a cancelar"
+              value={precio}
+              onChangeText={handlePrecioChange}
+              keyboardType="numeric"
+            />
+          </View>
+          <View style={{ justifyContent: "center", alignItems: "center" }}>
+            <Text style={styles.textimg}>Subir Factura</Text>
+            <View style={styles.contanierimg}>
+              {imagen ? (
+                <TouchableOpacity
+                  style={styles.image}
+                  onPress={() => handleSnapPress()}
+                >
+                  <Image source={{ uri: imagen }} style={styles.image} />
+                </TouchableOpacity>
+              ) : (
+                <MaterialCommunityIcons
+                  name="file-image-plus-outline"
+                  size={90}
+                  color="black"
+                  style={styles.iconStyleimg}
+                  onPress={() => handleSnapPress()}
+                />
+              )}
             </View>
           </View>
-        ) : (
           <View style={styles.sectionBottom}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => handleButtonPress("VehiculoEnTaller")}
-            >
-              <Text style={styles.textbutton}>Vehiculo En Taller</Text>
+            <TouchableOpacity style={styles.button3}>
+              <Text style={styles.textbutton2}>Informar Fallas</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.button2}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleButtonPress("MantenimientoCorrecto")}
+            >
               <Text style={styles.textbutton}>Mantenimiento Correcto</Text>
             </TouchableOpacity>
           </View>
-        )}
+        </View>
+
         {isOpen && (
           <TouchableOpacity
             style={styles.overlay}
@@ -290,8 +438,8 @@ export const DetalleMantenimeintoScreen = () => {
             ref={sheetRef}
             snapPoints={snapPoints}
             enablePanDownToClose={true}
-            onClose={closeSheet} // Cambia el estado a cerrado
-            onChange={handleSheetChange} // Cambia `isOpen` según el índice actual
+            onClose={closeSheet}
+            onChange={handleSheetChange}
           >
             <BottomSheetView>
               <View
@@ -309,12 +457,11 @@ export const DetalleMantenimeintoScreen = () => {
                   <Text style={styles.buttonShetText}>Tomar Foto</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.buttonShetContainer}>
-                  <MaterialIcons
-                    name="photo-library"
-                    size={20}
-                    color="#2A2A2A"
-                  />
+                <TouchableOpacity
+                  style={styles.buttonShetContainer}
+                  onPress={() => handlePickFile()}
+                >
+                  <AntDesign name="pdffile1" size={20} color="#2A2A2A" />
                   <Text style={styles.buttonShetText}>Subir Archivo</Text>
                 </TouchableOpacity>
               </View>

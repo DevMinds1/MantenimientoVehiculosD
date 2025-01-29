@@ -15,10 +15,11 @@ import {
   useNavigation,
 } from "@react-navigation/native";
 import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
+import { Timestamp } from "firebase/firestore";
 import { Order } from "../../../interface/repairshop";
 import { useUser } from "../../components/userAut/userContext";
 
-export const VerMantenimientoCompletadoScreen = () => {
+export const VerMantenimientoEnTaller = () => {
   const { top } = useSafeAreaInsets();
   const { user } = useUser();
   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
@@ -26,54 +27,10 @@ export const VerMantenimientoCompletadoScreen = () => {
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /*   const fetchPendingOrders = async () => {
-    try {
-      const response = await fetch(
-        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_completed_orders"
-      );
-      const data = await response.json();
-
-      const orders = [
-        ...data.map((order: any) => ({
-          ...order,
-          entry_date: order.entry_date ? new Date(order.entry_date) : null,
-          delivery_date: order.delivery_date ? new Date(order.delivery_date) : null,
-        })),
-      ];
-
-      setPendingOrders(orders);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error al obtener órdenes pendientes:", error);
-      setLoading(false);
-    }
-  }; */
-  /*   const ApiKey =
-    "eyJraWQiOiJnYXRld2F5X2NlcnRpZmljYXRlX2FsaWFzIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJhZG1pbkBjYXJib24uc3VwZXIiLCJhdWQiOiJiMGIzMjcyYy0xNzZhLTQzNTEtYTAyMS1lODYzMzIwYzFlZTkiLCJpc3MiOiJodHRwczovLzM0LjQ0LjEyMy45ODo5NDQzL29hdXRoMi90b2tlbiIsImtleXR5cGUiOiJQUk9EVUNUSU9OIiwic3Vic2NyaWJlZEFQSXMiOlt7Im5hbWUiOiJ2ZWhpY2xlcyIsImNvbnRleHQiOiIvdmVoaWNsZXMvMS4wLjAiLCJ2ZXJzaW9uIjoiMS4wLjAiLCJwdWJsaXNoZXIiOiJhZG1pbiIsInN1YnNjcmlwdGlvblRpZXIiOm51bGwsInN1YnNjcmliZXJUZW5hbnREb21haW4iOm51bGx9XSwiZXhwIjoxNzM3OTI1MDAxLCJ0b2tlbl90eXBlIjoiSW50ZXJuYWxLZXkiLCJpYXQiOjE3Mzc4NjUwMDEsImp0aSI6IjM1ZDQwNTI3LWQ5NDQtNDI0MS1hMDJiLTVmMzZlOWY0OGFlYiJ9.DvFLHCMwkD-_C-o3tD2Pm9G-LaYhe8Yn9IAM3cX6PdMcVchqS977MwtcO3OxjQslXyBEVybYOOq4SpW-HP0xqihP_gDBrt1arVtlvjt4ndV4BSRDvWifniu_zlXixdayBRO-cqZ9XZ2N5CeOswXVvqAKex5J0f1QGPC07zclBhWaLaeSXJ_8-kIRB6b6mtKcuQ2gTwQmjX-Z6xtfu1nZfnrgSYAiqrg_8tfjLSYhgnHalAI3UK_ZFnv-BtbWnDvi_IqKgzWGjG6QcoIF2XNcbhQapm_O6L5oFydtmcMVgQg3MigTGGg5iD9zchCNK1Fnbzc_AZ3f4-eXwUf3q-TAKw";
-  const fetchPendingOrders = async () => {
-    try {
-      const response = await fetch(
-        "https://34.44.123.98:8243/vehicles/1.0.0/api/get_vehicles",
-        {
-          method: "GET", 
-          headers: {
-            "Internal-Key": `${ApiKey}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const data = await response.json();
-      setPendingOrders(data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error al obtener órdenes pendientes:", error);
-      setLoading(false);
-    }
-  }; */
   const fetchPendingOrders = async () => {
     try {
       const pendingResponse = await fetch(
-        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_completed_orders"
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_repairshop_orders"
       );
       const pendingData = await pendingResponse.json();
 
@@ -129,6 +86,7 @@ export const VerMantenimientoCompletadoScreen = () => {
         },
         {}
       );
+      console.log("Mandated Map:", mandatedData);
 
       const vehicleMap: Record<string, any> = vehicleData.reduce(
         (map, vehicle) => {
@@ -144,13 +102,11 @@ export const VerMantenimientoCompletadoScreen = () => {
         {}
       );
 
+      console.log("Vehicle Map:", vehicleMap);
       let orders = pendingData.map((order: any) => ({
         ...order,
         // Asegúrate de incluir el entry_date una sola vez
         entry_date: order.entry_date ? new Date(order.entry_date) : null,
-        delivery_date: order.delivery_date
-          ? new Date(order.delivery_date)
-          : null,
 
         // Aquí se agregan los nuevos campos del segundo fragmento
         repairshopName:
@@ -209,22 +165,22 @@ export const VerMantenimientoCompletadoScreen = () => {
     <View style={{ backgroundColor: "white", flex: 1 }}>
       <View style={{ height: "95%" }}>
         <FlatList
-          data={pendingOrders}
+          data={pendingOrders.sort((a, b) => {
+            // Primero coloca los que tienen el estado "En Taller"
+            if (a.state === "En Taller" && b.state !== "En Taller") return -1;
+            if (a.state !== "En Taller" && b.state === "En Taller") return 1;
+            return 0; // Si ambos son iguales, no se cambia el orden
+          })}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() =>
-                navigation.navigate("HomeTab", {
-                  screen: "CompletadoMantenimeinto",
-                  params: {
-                    id: item.id,
-                    faults: item.faults,
-                    state: item.state,
-                    order: item,
-                  },
-                })
-              }
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor:
+                    item.state === "En Taller" ? "#FFD85659" : "#E0E0E0",
+                },
+              ]}
             >
               {/*   <SimpleLineIcons name="eye" size={24} color="black" /> */}
               <Text style={styles.title}>Mantenimiento {item.type}</Text>
@@ -232,13 +188,7 @@ export const VerMantenimientoCompletadoScreen = () => {
                 Fecha Ingreso:{" "}
                 <Text style={styles.value}>{formatDate(item.entry_date)}</Text>
               </Text>
-              <Text style={styles.label}>
-                Fecha Entrega:{" "}
-                <Text style={styles.value}>
-                  {formatDate(item.delivery_date)}
-                </Text>{" "}
-              </Text>
-
+              <Text style={styles.label}>Fecha Entrega: </Text>
               <Text style={styles.label}>
                 Tipo Mantenimiento:{" "}
                 <Text style={styles.value}>
@@ -248,10 +198,26 @@ export const VerMantenimientoCompletadoScreen = () => {
               <Text style={styles.label}>
                 Vehículo: <Text style={styles.value}>{item.vehicle}</Text>
               </Text>
-              <Text style={styles.label}>
-                Valor Cancelado: <Text style={styles.value}>${item.price}</Text>{" "}
-              </Text>
-            </TouchableOpacity>
+              <Text style={styles.label}>Valor Cancelado: </Text>
+              <View style={styles.buttonCont}>
+                <TouchableOpacity
+                  style={styles.statusButton}
+                  onPress={() =>
+                    navigation.navigate("HomeTab", {
+                      screen: "DetalleMantenimeinto",
+                      params: {
+                        id: item.id,
+                        faults: item.faults,
+                        state: item.state,
+                        order: item,
+                      },
+                    })
+                  }
+                >
+                  <Text style={styles.statusText}>Aceptado</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
         />
       </View>
@@ -265,8 +231,8 @@ export const VerMantenimientoCompletadoScreen = () => {
       ></View>
       <View style={styles.containerfoot}>
         <View style={styles.statusItem}>
-          <View style={[styles.circle, { backgroundColor: "#CFEBD7" }]} />
-          <Text style={styles.text}>Completado</Text>
+          <View style={[styles.circle, { backgroundColor: "#FFD85659" }]} />
+          <Text style={styles.text}>Vehículo en taller</Text>
         </View>
       </View>
     </View>
@@ -286,7 +252,6 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   card: {
-    backgroundColor: "#CFEBD7",
     marginHorizontal: 15,
     marginVertical: 10,
     paddingHorizontal: 10,
@@ -294,7 +259,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    height: 160,
+    height: 200,
   },
   title: {
     fontSize: 18,
@@ -354,7 +319,7 @@ const styles = StyleSheet.create({
   circle: {
     width: 10,
     height: 10,
-    borderRadius: 5, // Hace que el View sea redondeado
+    borderRadius: 5,
     marginRight: 8,
   },
   text: {

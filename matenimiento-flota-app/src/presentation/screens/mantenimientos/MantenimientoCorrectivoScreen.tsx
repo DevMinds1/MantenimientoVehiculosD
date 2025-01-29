@@ -148,6 +148,7 @@ export const MantenimientoCorrectivoScreen = () => {
     setFallasSeleccionadas([]);
     setEncargadoSeleccionado(null);
     setObservaciones("");
+    setSearchQueryEncargado("");
   };
 
   const obtenerDatos = async () => {
@@ -158,6 +159,7 @@ export const MantenimientoCorrectivoScreen = () => {
         responseConcesionario,
         responseMecanica,
         responseEncargado,
+        responseOrdenesPendientes,
       ] = await Promise.all([
         fetch(
           "https://us-central1-global-tine-447000-u6.cloudfunctions.net/vehicles/api/get_light_vehicles"
@@ -174,6 +176,9 @@ export const MantenimientoCorrectivoScreen = () => {
         fetch(
           "https://us-central1-global-tine-447000-u6.cloudfunctions.net/users/api/get_mandated_users"
         ),
+        fetch(
+          "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_pending_orders"
+        ),
       ]);
 
       const vehiculosLivianos = await responseLivianos.json();
@@ -181,12 +186,22 @@ export const MantenimientoCorrectivoScreen = () => {
       const consecionario = await responseConcesionario.json();
       const mecanica = await responseMecanica.json();
       const encargado = await responseEncargado.json();
+      const ordenesPendientes = await responseOrdenesPendientes.json();
 
-      setVehiculos([...vehiculosLivianos, ...vehiculosPesados]);
+      const placasEnMantenimiento = ordenesPendientes.map(
+        (orden: { vehicle: any }) => orden.vehicle
+      );
+
+      const vehiculosFiltrados = [
+        ...vehiculosLivianos,
+        ...vehiculosPesados,
+      ].filter((vehiculo) => !placasEnMantenimiento.includes(vehiculo.PLACA));
+
+      setVehiculos(vehiculosFiltrados);
       setTalleres([...consecionario, ...mecanica]);
       setEncargados([...encargado]);
     } catch (error) {
-      console.error("Error al obtener los Datos:", error);
+      console.error("Error al obtener los datos:", error);
     }
   };
 
@@ -239,10 +254,10 @@ export const MantenimientoCorrectivoScreen = () => {
     const queryLower = searchQueryVehiculo.toLowerCase();
     return (
       vehiculo.TIPO_VEHICULO === tabVehiculo &&
-      (vehiculo.PLACA ||
+      (vehiculo.PLACA.toString().toLowerCase().includes(queryLower) ||
         vehiculo.MARCA.toLowerCase().includes(queryLower) ||
         vehiculo.MODELO_ANIO.toLowerCase().includes(queryLower) ||
-        vehiculo.ANIO)
+        vehiculo.ANIO.toString().includes(queryLower))
     );
   });
 
@@ -390,7 +405,7 @@ export const MantenimientoCorrectivoScreen = () => {
                             numberOfLines={1}
                             ellipsizeMode="tail"
                           >
-                            {item.MODELO_ANIO}
+                            {item.MARCA}
                           </Text>
                           <Text style={styles.listItemTextPlaca}>
                             {item.PLACA}
@@ -611,7 +626,7 @@ export const MantenimientoCorrectivoScreen = () => {
             <ScrollView style={styles.scrollContainerEncargado}>
               {filteredEncargado.map((item) => (
                 <TouchableOpacity
-                  key={item.uid ? item.uid : Math.random()} 
+                  key={item.uid ? item.uid : Math.random()}
                   onPress={() => setEncargadoSeleccionado(item)}
                 >
                   <View
@@ -652,7 +667,7 @@ export const MantenimientoCorrectivoScreen = () => {
 
           {/* Resumen y Generar Orden */}
           <View style={styles.summary}>
-             <Text>Vehículo: {vehiculoSeleccionado?.PLACA || "Ninguno"}</Text>
+            <Text>Vehículo: {vehiculoSeleccionado?.PLACA || "Ninguno"}</Text>
             <Text>Taller: {tallerSeleccionado?.name || "Ninguno"}</Text>
             <Text>
               Fallas:{" "}
@@ -661,7 +676,7 @@ export const MantenimientoCorrectivoScreen = () => {
                 .join(", ") || "Ninguna"}
             </Text>
             <Text>Encargado: {encargadoSeleccionado?.uid || "Ninguno"}</Text>
-            <Text>Observaciones: {observaciones || "Ninguna"}</Text> 
+            <Text>Observaciones: {observaciones || "Ninguna"}</Text>
             <TouchableOpacity
               onPress={generarOrden}
               style={styles.button}

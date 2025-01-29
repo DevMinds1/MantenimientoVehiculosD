@@ -15,35 +15,127 @@ import {
   useNavigation,
 } from "@react-navigation/native";
 import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
-
-interface Order {
-  vehicle: string;
-  repairshop: string;
-  mandated: string;
-  faults: string[]
-  state: string;
-  comments: string;
-  type: string;
-  id: string;
-}
+import { Timestamp } from "firebase/firestore";
+import { Order } from "../../../interface/repairshop";
+import { useUser } from "../../components/userAut/userContext";
 
 export const VerMantenimientoPendienteScreen = () => {
   const { top } = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
+  const { user } = useUser();
 
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchPendingOrders = async () => {
     try {
-      const response = await fetch(
+      const pendingResponse = await fetch(
         "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_pending_orders"
       );
-      const data = await response.json();
-      setPendingOrders(data);
+      const pendingData = await pendingResponse.json();
+
+      const repairshopIds = [
+        ...new Set(pendingData.map((order: any) => order.repairshop)),
+      ];
+
+      const repairshopPromises = repairshopIds.map((id) =>
+        fetch(
+          `https://us-central1-global-tine-447000-u6.cloudfunctions.net/repairshops/api/get_repairshop_by_id?id=${id}`
+        ).then((res) => res.json())
+      );
+
+      const mandatedIds = [
+        ...new Set(pendingData.map((order: any) => order.mandated)),
+      ];
+
+      const mandatedPromises = mandatedIds.map((id) =>
+        fetch(
+          `https://us-central1-global-tine-447000-u6.cloudfunctions.net/users/api/get_user_by_id?uid=${id}`
+        ).then((res) => res.json())
+      );
+
+      const vehicleIds = [
+        ...new Set(pendingData.map((order: any) => order.vehicle)),
+      ];
+
+      const vehiclePromises = vehicleIds.map((id) =>
+        fetch(
+          `https://us-central1-global-tine-447000-u6.cloudfunctions.net/vehicles/api/get_vehicle_by_plate?PLACA=${id}`
+        ).then((res) => res.json())
+      );
+
+      const [repairshopData, mandatedData, vehicleData] = await Promise.all([
+        Promise.all(repairshopPromises),
+        Promise.all(mandatedPromises),
+        Promise.all(vehiclePromises),
+      ]);
+
+      // Crear diccionarios para un acceso rápido
+      const repairshopMap: Record<string, any> = repairshopData.reduce(
+        (map, shop) => {
+          map[shop.id] = { name: shop.name, address: shop.address };
+          return map;
+        },
+        {}
+      );
+
+      const mandatedMap: Record<string, any> = mandatedData.reduce(
+        (map, mandated) => {
+          map[mandated.uid] = { name: mandated.name, correo: mandated.email };
+          return map;
+        },
+        {}
+      );
+      console.log("Mandated Map:", mandatedData);
+
+      const vehicleMap: Record<string, any> = vehicleData.reduce(
+        (map, vehicle) => {
+          map[vehicle.PLACA] = {
+            marca: vehicle.MARCA,
+            motor: vehicle.MOTOR,
+            tipo: vehicle.TIPO,
+            tipo_vehicle: vehicle.TIPO_VEHICULO,
+            propiedad: vehicle.PROPIEDAD,
+          };
+          return map;
+        },
+        {}
+      );
+
+      console.log("Vehicle Map:", vehicleMap);
+
+      let orders = pendingData.map((order: any) => ({
+        ...order,
+        repairshopName:
+          repairshopMap[order.repairshop]?.name || "Taller desconocido",
+        repairshopAddress:
+          repairshopMap[order.repairshop]?.address || "Dirección desconocida",
+        mandatedName:
+          mandatedMap[order.mandated]?.name || "Encargado desconocido",
+        mandatedEmail:
+          mandatedMap[order.mandated]?.correo || "Email desconocido",
+        vehicleMarca: vehicleMap[order.vehicle]?.marca || "Marca desconocida",
+        vehicleMotor: vehicleMap[order.vehicle]?.motor || "Motor desconocida",
+        vehicleTipo: vehicleMap[order.vehicle]?.tipo || "Tipo desconocida",
+        vehicleTipoVehi:
+          vehicleMap[order.vehicle]?.tipo_vehicle ||
+          "Tipo Vehiculo desconocida",
+        vehiclePropiedad:
+          vehicleMap[order.vehicle]?.propiedad || "Propiedad desconocida",
+        entry_date: order.entry_date ? new Date(order.entry_date) : null,
+      }));
+
+      if (user?.role === "mandated") {
+        orders = orders.filter(
+          (order: { mandated: string }) => order.mandated === user.uid
+        );
+      }
+
+      setPendingOrders(orders);
       setLoading(false);
+      console.log(orders);
     } catch (error) {
-      console.error("Error al obtener órdenes pendientes:", error);
+      console.error("Error al obtener órdenes:", error);
       setLoading(false);
     }
   };
@@ -69,37 +161,51 @@ export const VerMantenimientoPendienteScreen = () => {
           data={pendingOrders}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor:
+                    item.state === "En Taller" ? "#FFD85659" : "#E0E0E0",
+                },
+              ]}
+            >
               {/*   <SimpleLineIcons name="eye" size={24} color="black" /> */}
               <Text style={styles.title}>Mantenimiento {item.type}</Text>
               <Text style={styles.label}>
                 Fecha Ingreso:{" "}
-                <Text style={styles.value}>15/10/2024 11:35</Text>
+                <Text style={styles.value}>Sin Fecha Registrada</Text>
               </Text>
-              <Text style={styles.label}>Fecha Entrega:</Text>
               <Text style={styles.label}>
-                Tipo Mantenimiento:{" "}
-                <Text style={styles.value}>
-                  Reparación en Sistema de frenos
-                </Text>
+                Fecha Entrega:
+                <Text style={styles.value}>Sin Fecha Registrada</Text>
+              </Text>
+              <Text style={styles.label}>
+                Taller: <Text style={styles.value}>{item.repairshopName}</Text>
               </Text>
               <Text style={styles.label}>
                 Vehículo: <Text style={styles.value}>{item.vehicle}</Text>
               </Text>
-              <Text style={styles.label}>Valor Cancelado:</Text>
+              <Text style={styles.label}>
+                Encargado: <Text style={styles.value}>{item.mandatedName}</Text>{" "}
+              </Text>
+
               <View style={styles.buttonCont}>
-               
                 <TouchableOpacity
                   style={styles.statusButton}
-                  onPress={() =>
+                  onPress={() => {
                     navigation.navigate("HomeTab", {
-                      screen: "DetalleMantenimeinto",
-                      params: { id: item.id , faults: item.faults },
-                    })
-                  }
+                      screen: "PendienteMantenimeinto",
+                      params: {
+                        id: item.id,
+                        faults: item.faults,
+                        state: item.state,
+                        order: item,
+                      },
+                    });
+                  }}
                 >
-                  <Text style={styles.statusText}>Aceptado</Text>
-
+                  <Text style={styles.statusText}>Ver</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -119,10 +225,6 @@ export const VerMantenimientoPendienteScreen = () => {
           <View style={[styles.circle, { backgroundColor: "#BDBDBD" }]} />
           <Text style={styles.text}>Vehículo en camino</Text>
         </View>
-        <View style={styles.statusItem}>
-          <View style={[styles.circle, { backgroundColor: "#FFD85659" }]} />
-          <Text style={styles.text}>Vehículo en taller</Text>
-        </View>
       </View>
     </View>
   );
@@ -141,7 +243,6 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   card: {
-    backgroundColor: "#E0E0E0",
     marginHorizontal: 15,
     marginVertical: 10,
     paddingHorizontal: 10,
@@ -197,7 +298,7 @@ const styles = StyleSheet.create({
   },
   containerfoot: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
     marginVertical: 8,

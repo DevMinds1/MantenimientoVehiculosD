@@ -21,6 +21,7 @@
     "expo": "~52.0.26",
     "expo-camera": "~16.0.12",
     "expo-checkbox": "~4.0.1",
+    "expo-document-picker": "~13.0.2",
     "expo-font": "~13.0.3",
     "expo-image-picker": "~16.0.4",
     "expo-media-library": "~17.0.5",

@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "host": "192.168.1.149",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -38,8 +39,13 @@
           "cameraPermission": "Permite que $(PRODUCT_NAME) acceda a tu cámara",
           "recordAudioAndroid": true
         }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
       ]
-
     ],
     "extra": {
       "eas": {

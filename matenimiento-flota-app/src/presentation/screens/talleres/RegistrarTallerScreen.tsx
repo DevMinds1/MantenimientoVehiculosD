@@ -28,7 +28,8 @@ type FormData = {
   name: string;
   address: string;
   phone: string;
-  city: string;
+  contact: string;
+  ruc: string;
   type: string;
   image: string;
 };
@@ -42,7 +43,8 @@ export const RegistrarTallerScreen = () => {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
+  const [contact, setContact] = useState("");
+  const [ruc, setRuc] = useState("");
   const [imagen, setimagen] = useState("");
 
   const handleMechanicChange = (value: boolean) => {
@@ -165,7 +167,8 @@ export const RegistrarTallerScreen = () => {
       !name ||
       !address ||
       !phone ||
-      !city ||
+      !contact ||
+      !ruc ||
       (!mechanic && !dealership) ||
       !imagen
     ) {
@@ -182,7 +185,8 @@ export const RegistrarTallerScreen = () => {
         name,
         address,
         phone,
-        city,
+        contact,
+        ruc,
         type: mechanic ? "Mecánica" : "Concesionario",
         image: imageURL,
       };
@@ -217,7 +221,8 @@ export const RegistrarTallerScreen = () => {
   };
   const resetFields = () => {
     setName("");
-    setCity("");
+    setContact("");
+    setRuc("");
     setPhone("");
     setAddress("");
     setMechanic(false);
@@ -292,12 +297,21 @@ export const RegistrarTallerScreen = () => {
               />
             </View>
             <View style={styles.inputRow}>
-              <Text style={styles.label}>Ciudad:</Text>
+              <Text style={styles.label}>Contacto:</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Ingrese Ciudad"
-                value={city}
-                onChangeText={setCity}
+                placeholder="Ingrese Nombre del Contacto"
+                value={contact}
+                onChangeText={setContact}
+              />
+            </View>
+            <View style={styles.inputRow}>
+              <Text style={styles.label}>Ruc:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ingrese Ruc"
+                value={ruc}
+                onChangeText={setRuc}
               />
             </View>
           </View>

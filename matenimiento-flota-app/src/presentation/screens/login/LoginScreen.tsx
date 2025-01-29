@@ -154,14 +154,6 @@ export const LoginScreen = ({ navigation }: Props) => {
               <Text style={styles.buttonText}>Iniciar Sesión</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => navigation.navigate("HomeStack")}
-            >
-              <Text style={styles.buttonText}> Pruebas</Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
       </View>
     </GestureHandlerRootView>

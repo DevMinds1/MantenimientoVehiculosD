@@ -9,19 +9,13 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import { SideMenuNavigator } from "./SaveMenuNavigator";
 
 import { TopTabsVehiculoNavigator } from "./TopTabsVehiculoNavigator";
+import { Order, RepairShop } from "../../interface/repairshop";
 
-export type Order = {
-  vehicle: string;
-  repairshop: string;
-  mandated: string;
-  faults: string;
-  state: string;
-  comments: string; }
 
 export type RootButtonParams = {
-  HomeTab: { screen: string ;  params?: { id: string , faults: string[] }};
+  HomeTab: { screen: string ;  params?: { id: string , faults: string[] , state: string, order: Order } };
   Vehiculos: { screen: string };
-  Mantenimientos: undefined;
+  Mantenimientos: { screen?: string ; } | undefined;
 };
 
 const Tab = createBottomTabNavigator();

@@ -10,22 +10,13 @@ cors = CORS(app, origins='*')
 @app.route('/api/register_repairshop', methods=['POST'])
 def register_repairshop():
     try:
-        name = request.form.get('name')
-        address = request.form.get('address')
-        phone = request.form.get('phone')
-        city = request.form.get('city')
-        type = request.form.get('type')
-        image = request.files.get('image')
-
-        if not image:
-            return jsonify({'error': 'No se envió ninguna imagen'}), 400
-
-        filename = secure_filename(image.filename)
-        blob = bucket.blob(f"repairshops/{filename}")
-        blob.upload_from_file(image.stream, content_type=image.content_type)
-
-        blob.make_public()
-        image_url = blob.public_url
+        data = request.get_json()
+        name = data.get('name')
+        address = data.get('address')
+        phone = data.get('phone')
+        city = data.get('city')
+        type = data.get('type')
+        image = data.get('image')
 
         repairshops_ref = db.collection('repairshops')
         new_repairshop = {
@@ -34,7 +25,7 @@ def register_repairshop():
             'phone': phone,
             'city': city,
             'type': type,
-            'image_url': image_url
+            'image_url': image
         }
 
         doc_ref = repairshops_ref.add(new_repairshop)[1]
@@ -43,11 +34,30 @@ def register_repairshop():
 
         repairshops_ref.document(doc_id).update({'id': doc_id})
 
-        return jsonify({'message': 'Taller registrado exitosamente', 'image_url': image_url}), 201
+        return jsonify({'message': 'Taller registrado exitosamente', 'image_url': image}), 201
 
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/get_repairshop_by_id', methods=['GET'])
+def get_repairshop_by_id():
+    try:
+        repairshop_id = request.args.get('id')
+        if not repairshop_id:
+            return jsonify({'error': 'El parámetro "id" es requerido'}), 400
+
+        repairshop_ref = db.collection('repairshops').document(repairshop_id)
+        repairshop = repairshop_ref.get()
+
+        if not repairshop.exists:
+            return jsonify({'error': 'Taller no encontrado'}), 404
+
+        return jsonify(repairshop.to_dict()), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
     
 @app.route('/api/get_mechanic_repairshops', methods=['GET'])
 def get_mechanic_repairshops():

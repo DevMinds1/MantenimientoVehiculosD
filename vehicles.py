@@ -10,32 +10,23 @@ cors = CORS(app, origins='*')
 @app.route('/api/register_vehicle', methods=['POST'])
 def register_vehicle():
     try:
-        actividadUbicacion = request.form.get('actividadUbicacion')
-        anio = request.form.get('anio')
-        chasis = request.form.get('chasis')
-        color = request.form.get('color')
-        combustible = request.form.get('combustible')
-        detalle = request.form.get('detalle')
-        marca = request.form.get('marca')
-        modeloAnio = request.form.get('modeloAnio')
-        motor = request.form.get('motor')
-        num = request.form.get('num')
-        placa = request.form.get('placa')
-        propiedad = request.form.get('propiedad')
-        responsable = request.form.get('responsable')
-        tipo = request.form.get('tipo')
-        tipoVehiculo = request.form.get('tipoVehiculo')
-        image = request.files.get('image')
-
-        if not image:
-            return jsonify({'error': 'No se envió ninguna imagen'}), 400
-
-        filename = secure_filename(image.filename)
-        blob = bucket.blob(f"vehicles/{filename}")
-        blob.upload_from_file(image.stream, content_type=image.content_type)
-
-        blob.make_public()
-        image_url = blob.public_url
+        data = request.get_json()
+        actividadUbicacion = data.get('actividadUbicacion')
+        anio = data.get('anio')
+        chasis = data.get('chasis')
+        color = data.get('color')
+        combustible = data.get('combustible')
+        detalle = data.get('detalle')
+        marca = data.get('marca')
+        modeloAnio = data.get('modeloAnio')
+        motor = data.get('motor')
+        num = data.get('num')
+        placa = data.get('placa')
+        propiedad = data.get('propiedad')
+        responsable = data.get('responsable')
+        tipo = data.get('tipo')
+        tipoVehiculo = data.get('tipoVehiculo')
+        image = data.get('imagen')
 
         vehicles_ref = db.collection('vehiculos')
         new_vehicle = {
@@ -54,7 +45,7 @@ def register_vehicle():
             'RESPONSABLE': responsable,
             'TIPO': tipo,
             'TIPO_VEHICULO': tipoVehiculo,
-            'IMAGE_URL': image_url 
+            'IMAGE_URL': image 
         }
 
         doc_ref = vehicles_ref.add(new_vehicle)[1]
@@ -63,7 +54,7 @@ def register_vehicle():
 
         vehicles_ref.document(doc_id).update({'id': doc_id})
 
-        return jsonify({'message': 'Vehículo registrado correctamente', 'image_url': image_url}), 201
+        return jsonify({'message': 'Vehículo registrado correctamente', 'image_url': image}), 201
 
     except Exception as e:
         print(f"Error: {str(e)}")
@@ -76,6 +67,25 @@ def get_vehicles():
         vehicles_ref = db.collection('vehiculos')
         vehicles = [doc.to_dict() for doc in vehicles_ref.stream()]
         return jsonify(vehicles), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/get_vehicle_by_plate', methods=['GET'])
+def get_vehicle_by_plate():
+    try:
+        vehicle_plate = request.args.get('PLACA')
+        if not vehicle_plate:
+            return jsonify({'error': 'El parámetro "PLACA" es requerido'}), 400
+
+        vehicles_ref = db.collection('vehiculos').where('PLACA', '==', vehicle_plate)
+        vehicle_docs = vehicles_ref.stream()
+
+        vehicles = [doc.to_dict() for doc in vehicle_docs]
+        if not vehicles:
+            return jsonify({'error': 'Vehículo no encontrado'}), 404
+
+        return jsonify(vehicles[0]), 200
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     

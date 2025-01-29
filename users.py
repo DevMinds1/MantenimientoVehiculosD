@@ -48,6 +48,24 @@ def authentication():
         return jsonify({'error': 'Error con Firebase: ' + str(e)}), 500
     except Exception as e:
         return jsonify({'error': 'Error interno: ' + str(e)}), 500
+    
+@app.route('/api/get_user_by_id', methods=['GET'])
+def get_user_by_id():
+    try:
+        user_id = request.args.get('uid')
+        if not user_id:
+            return jsonify({'error': 'El parámetro "uid" es requerido'}), 400
+
+        user_ref = db.collection('users').document(user_id)
+        user = user_ref.get()
+
+        if not user.exists:
+            return jsonify({'error': 'Usuario no encontrado'}), 404
+
+        return jsonify(user.to_dict()), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/get_mandated_users', methods=['GET'])
 def get_mandated_users():

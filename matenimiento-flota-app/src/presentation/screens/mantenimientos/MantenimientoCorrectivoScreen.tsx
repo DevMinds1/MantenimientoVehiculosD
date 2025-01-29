@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Button,
   TextInput,
-  Image,
 } from "react-native";
 import Checkbox from "expo-checkbox";
 import { globalStyles } from "../../theme/theme";
@@ -23,6 +22,7 @@ import {
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
+import { Image } from "expo-image";
 
 interface Vehiculo {
   ACTIVIDAD_UBICACION: string;
@@ -41,7 +41,7 @@ interface Vehiculo {
   TIPO: string;
   TIPO_VEHICULO: string;
   id: string;
-  // IMAGE_URL: string;
+  IMAGE_URL: string;
 }
 
 interface Taller {
@@ -393,10 +393,13 @@ export const MantenimientoCorrectivoScreen = () => {
                         <View style={styles.containerImg}>
                           <Image
                             source={{
-                              uri: "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/Hilux00-removebg-preview%201.png?raw=true",
+                              uri:
+                                item.IMAGE_URL && item.IMAGE_URL !== ""
+                                  ? item.IMAGE_URL
+                                  : "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/Hilux00-removebg-preview%201.png?raw=true",
                             }}
-                            resizeMode="contain"
                             style={{ width: "100%", height: "100%" }}
+                            cachePolicy="memory-disk"
                           />
                         </View>
                         <View style={styles.containerInfo}>
@@ -557,7 +560,7 @@ export const MantenimientoCorrectivoScreen = () => {
             <View style={styles.tabs}>
               <View style={{ width: "100%", alignItems: "center" }}>
                 <Text style={styles.activeTab}>Fallas</Text>
-                {tabTaller === "Mecánica" && (
+                
                   <View
                     style={{
                       height: 4,
@@ -566,7 +569,7 @@ export const MantenimientoCorrectivoScreen = () => {
                       width: "30%",
                     }}
                   ></View>
-                )}
+               
               </View>
             </View>
             <View
@@ -667,7 +670,7 @@ export const MantenimientoCorrectivoScreen = () => {
 
           {/* Resumen y Generar Orden */}
           <View style={styles.summary}>
-            <Text>Vehículo: {vehiculoSeleccionado?.PLACA || "Ninguno"}</Text>
+{/*             <Text>Vehículo: {vehiculoSeleccionado?.PLACA || "Ninguno"}</Text>
             <Text>Taller: {tallerSeleccionado?.name || "Ninguno"}</Text>
             <Text>
               Fallas:{" "}
@@ -676,7 +679,7 @@ export const MantenimientoCorrectivoScreen = () => {
                 .join(", ") || "Ninguna"}
             </Text>
             <Text>Encargado: {encargadoSeleccionado?.uid || "Ninguno"}</Text>
-            <Text>Observaciones: {observaciones || "Ninguna"}</Text>
+            <Text>Observaciones: {observaciones || "Ninguna"}</Text> */}
             <TouchableOpacity
               onPress={generarOrden}
               style={styles.button}
@@ -762,6 +765,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#004270",
     fontFamily: "Inter",
+    marginBottom:4
   },
   card: {
     paddingHorizontal: 10,
@@ -810,7 +814,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   selectedCard: {
-    backgroundColor: "#F7F7F7",
+    backgroundColor: "#EAEAEA",
     borderColor: "#1890ff",
   },
   checkboxContainer: {

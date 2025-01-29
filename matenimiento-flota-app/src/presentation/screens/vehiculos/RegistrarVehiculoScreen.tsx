@@ -84,6 +84,8 @@ export const RegistrarVehiculoScreen = () => {
   const [tipo, setTipo] = useState("");
   const [tipoVehiculo, setTipoVehiculo] = useState("");
   const [imagen, setimagen] = useState("");
+  const [anioError, setAnioError] = useState("");
+  const [numError, setNumError] = useState("");
 
   const sheetRef = useRef<BottomSheet>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -327,6 +329,24 @@ export const RegistrarVehiculoScreen = () => {
     setimagen("");
   };
 
+  const validateAnio = (text: string) => {
+    if (!/^\d{4}$/.test(text)) {
+      setAnioError("Ingrese un año válido (4 dígitos)");
+    } else {
+      setAnioError("");
+    }
+    setAnio(text);
+  };
+
+  const validateNum = (text: string) => {
+    if (text.trim() === "") {
+      setNumError("El número del vehículo es obligatorio");
+    } else {
+      setNumError("");
+    }
+    setNum(text);
+  };
+
   return (
     <GestureHandlerRootView style={globalStyles(top).container}>
       <View style={styles.containerTitle}>
@@ -388,12 +408,15 @@ export const RegistrarVehiculoScreen = () => {
           <View style={styles.inputRow}>
             <Text style={styles.label}>Año:</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, anioError ? styles.inputError : null]}
               placeholder="Ingrese Año"
               value={anio}
-              onChangeText={setAnio}
+              onChangeText={validateAnio}
+              keyboardType="numeric"
+              maxLength={4}
             />
           </View>
+          {anioError ? <Text style={styles.errorText}>{anioError}</Text> : null}
           <View style={styles.inputRow}>
             <Text style={styles.label}>Chasis:</Text>
             <TextInput
@@ -460,12 +483,14 @@ export const RegistrarVehiculoScreen = () => {
           <View style={styles.inputRow}>
             <Text style={styles.label}>Número:</Text>
             <TextInput
-              style={styles.input}
+             style={[styles.input, numError ? styles.inputError : null]}
               placeholder="Ingrese el número del vehículo"
               value={num}
-              onChangeText={setNum}
+              keyboardType="numeric"
+              onChangeText={validateNum}
             />
           </View>
+          {numError ? <Text style={styles.errorText}>{numError}</Text> : null}
           <View style={styles.inputRow}>
             <Text style={styles.label}>Propiedad:</Text>
             <TextInput
@@ -563,6 +588,7 @@ export const RegistrarVehiculoScreen = () => {
               color="#D3D3D3"
             />
             <Text style={styles.checkboxLabel}>Pesado</Text>
+            
           </View>
         </View>
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
@@ -606,12 +632,13 @@ export const RegistrarVehiculoScreen = () => {
                 onPress={() => changeImage()}
               >
                 <MaterialIcons name="photo-library" size={20} color="#2A2A2A" />
-                <Text style={styles.buttonShetText}>Subir Archivo</Text>
+                <Text style={styles.buttonShetText}>Subir de Galeria</Text>
               </TouchableOpacity>
             </View>
           </BottomSheetView>
         </BottomSheet>
       )}
+      
       {cameraOpen && (
         <View style={styles.containerCamera}>
           <CameraView style={styles.camera} ref={cameraRef}>
@@ -735,7 +762,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginTop: 10,
     marginBottom: 20,
-    marginHorizontal: 2,
+    marginHorizontal: 12,
   },
   checkboxContainer: {
     flexDirection: "row",
@@ -851,8 +878,9 @@ const styles = StyleSheet.create({
     color: "#6A6A6A",
   },
   section: {
-    marginBottom: 10,
+    marginBottom: 20,
     marginTop: 10,
+    marginHorizontal:8
   },
   buscar: {
     flexDirection: "row",
@@ -886,7 +914,7 @@ const styles = StyleSheet.create({
     height: 150,
   },
   selectedCard: {
-    backgroundColor: "#F7F7F7",
+    backgroundColor: "#EAEAEA",
     borderColor: "#1890ff",
   },
   containerItem: {
@@ -903,5 +931,19 @@ const styles = StyleSheet.create({
   card: {
     paddingHorizontal: 10,
     borderRadius: 5,
+  },
+  inputError: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    height: 40,
+    width: "100%",
+    borderRadius: 5,
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 8,
+    marginLeft: 10,
   },
 });

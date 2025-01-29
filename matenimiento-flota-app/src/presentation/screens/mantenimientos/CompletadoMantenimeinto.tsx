@@ -10,7 +10,6 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Image,
   TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,6 +29,8 @@ import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { ScrollView } from "react-native-gesture-handler";
 import { Order } from "../../../interface/repairshop";
+import { Image } from "expo-image";
+import * as Print from "expo-print";
 
 export const CompletadoMantenimeinto = () => {
   const { top } = useSafeAreaInsets();
@@ -40,6 +41,10 @@ export const CompletadoMantenimeinto = () => {
     state: string;
     order: Order;
   };
+
+  const url = order.url || "";
+  const fileExtension = url.split("?")[0].toLowerCase(); // Eliminar query params
+  const isPdf = fileExtension.endsWith(".pdf");
 
   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
   const [precio, setPrecio] = useState("");
@@ -74,134 +79,157 @@ export const CompletadoMantenimeinto = () => {
     );
   };
 
+  const handleOpenPdf = async () => {
+    if (isPdf && url) {
+      await Print.printAsync({ uri: url });
+    }
+  };
+
   return (
-    <ScrollView>
-      <View style={globalStyles(top).container}>
-        <View style={styles.containerTitle}>
-          <SimpleLineIcons
-            name="arrow-left"
-            size={19}
-            color="#004270"
-            style={styles.iconStyle}
-            onPress={() => navigation.navigate("Mantenimientos")}
-          />
-          <Text style={styles.title}>Detalle Mantenimiento Com</Text>
-        </View>
+    <View style={globalStyles(top).container}>
+      <View style={styles.containerTitle}>
+        <SimpleLineIcons
+          name="arrow-left"
+          size={19}
+          color="#004270"
+          style={styles.iconStyle}
+          onPress={() => navigation.navigate("Mantenimientos")}
+        />
+        <Text style={styles.title}>Detalle Mantenimiento</Text>
+      </View>
+      <ScrollView showsVerticalScrollIndicator={false} >
+        <View >
+          <View style={styles.containerImg}>
+            <Image
+              source={{
+                uri:
+                  order.vehicleImage && order.vehicleImage !== ""
+                    ? order.vehicleImage
+                    : "https://fotos.perfil.com/2022/11/12/como-es-la-nueva-pick-up-china-que-llegara-al-pais-1452313.jpg",
+              }}
+              style={{ width: "100%", height: "100%" }}
+              cachePolicy="memory-disk"
+              contentFit="contain"
+            />
+          </View>
 
-        <View style={styles.containerImg}>
-          <Image
-            source={{
-              uri: "https://fotos.perfil.com/2022/11/12/como-es-la-nueva-pick-up-china-que-llegara-al-pais-1452313.jpg",
-            }}
-            style={{ width: "100%", height: "100%" }}
-          />
-        </View>
+          <View style={styles.containerInfo}>
+            <Text style={styles.subtitle}>Vehículo</Text>
+            <Text style={styles.textoInfo}>
+              {order.vehicleMarca} ({order.vehicle})
+            </Text>
+            <Text style={styles.textoInfo}>Motor: {order.vehicleMotor}</Text>
+            <Text style={styles.textoInfo}>
+              Tipo: {order.vehicleTipo} ({order.vehicleTipoVehi}){" "}
+            </Text>
+            <Text style={styles.textoInfo}>
+              Propiedad: {order.vehiclePropiedad}
+            </Text>
+            <Text style={styles.subtitle}>Encargado</Text>
+            <Text style={styles.textoInfo}>Nombre: {order.mandatedName}</Text>
+            <Text style={styles.textoInfo}>Email: {order.mandatedEmail}</Text>
+            <Text style={styles.subtitle}>Taller</Text>
+            <Text style={styles.textoInfo}>{order.repairshopName}</Text>
+            <Text style={styles.textoInfo}>{order.repairshopAddress}</Text>
+          </View>
 
-        <View style={styles.containerInfo}>
-          <Text style={styles.subtitle}>Vehículo</Text>
-          <Text style={styles.textoInfo}>
-            {order.vehicleMarca} ({order.vehicle})
-          </Text>
-          <Text style={styles.textoInfo}>Motor: {order.vehicleMotor}</Text>
-          <Text style={styles.textoInfo}>
-            Tipo: {order.vehicleTipo} ({order.vehicleTipoVehi}){" "}
-          </Text>
-          <Text style={styles.textoInfo}>
-            Propiedad: {order.vehiclePropiedad}
-          </Text>
-          <Text style={styles.subtitle}>Encargado</Text>
-          <Text style={styles.textoInfo}>Nombre: {order.mandatedName}</Text>
-          <Text style={styles.textoInfo}>Email: {order.mandatedEmail}</Text>
-          <Text style={styles.subtitle}>Taller</Text>
-          <Text style={styles.textoInfo}>{order.repairshopName}</Text>
-          <Text style={styles.textoInfo}>{order.repairshopAddress}</Text>
-        </View>
+          <View style={styles.section}>
+            <View style={styles.tabs}>
+              <View style={{ width: "100%", alignItems: "center" }}>
+                <Text style={styles.activeTab}>Fallas</Text>
+                {tabTaller === "Mecánica" && (
+                  <View
+                    style={{
+                      height: 4,
+                      backgroundColor: "#FEBE10",
+                      marginVertical: 2,
+                      width: "30%",
+                    }}
+                  ></View>
+                )}
+              </View>
+            </View>
+            <View
+              style={{
+                height: 2,
+                backgroundColor: "#E0E0E0",
+                marginTop: -16,
+                width: "100%",
+                marginBottom: 10,
+              }}
+            ></View>
+            <View style={styles.containerFallas}>
+              {fallasConId.length > 0 ? (
+                fallasConId.map((item) => (
+                  <View key={item.id} style={styles.checkboxContainerFallas}>
+                    <View
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderWidth: 2,
+                        borderColor: "#F2B705", // Borde amarillo
+                        backgroundColor: fallasSeleccionadas.includes(item.id)
+                          ? "#F2B705"
+                          : "#EEE", // Fondo amarillo si seleccionado, gris si no
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {fallasSeleccionadas.includes(item.id) && (
+                        <MaterialCommunityIcons
+                          name="check"
+                          size={16}
+                          color="#FFF"
+                        />
+                      )}
+                    </View>
 
-        <View style={styles.section}>
-          <View style={styles.tabs}>
-            <View style={{ width: "100%", alignItems: "center" }}>
-              <Text style={styles.activeTab}>Fallas</Text>
-              {tabTaller === "Mecánica" && (
-                <View
-                  style={{
-                    height: 4,
-                    backgroundColor: "#FEBE10",
-                    marginVertical: 2,
-                    width: "30%",
-                  }}
-                ></View>
+                    <Text style={styles.descriptionCheck}>
+                      {item.descripcion}
+                    </Text>
+                  </View>
+                ))
+              ) : (
+                <Text>No hay fallas disponibles</Text>
               )}
             </View>
           </View>
-          <View
-            style={{
-              height: 2,
-              backgroundColor: "#E0E0E0",
-              marginTop: -16,
-              width: "100%",
-              marginBottom: 10,
-            }}
-          ></View>
-          <View style={styles.containerFallas}>
-            {fallasConId.length > 0 ? (
-              fallasConId.map((item) => (
-                <View key={item.id} style={styles.checkboxContainerFallas}>
-                  <View
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderWidth: 2,
-                      borderColor: "#F2B705", // Borde amarillo
-                      backgroundColor: fallasSeleccionadas.includes(item.id)
-                        ? "#F2B705"
-                        : "#EEE", // Fondo amarillo si seleccionado, gris si no
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {fallasSeleccionadas.includes(item.id) && (
-                      <MaterialCommunityIcons
-                        name="check"
-                        size={16}
-                        color="#FFF"
-                      />
-                    )}
-                  </View>
-
-                  <Text style={styles.descriptionCheck}>
-                    {item.descripcion}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              <Text>No hay fallas disponibles</Text>
-            )}
-          </View>
-        </View>
-        {order.type == "Correctivo" && (
+          {order.type == "Correctivo" && (
+            <View style={styles.containerInfo}>
+              <Text style={styles.subtitle}>Observaciones</Text>
+              <Text style={styles.textoInfo}>{order.comments}</Text>
+            </View>
+          )}
           <View style={styles.containerInfo}>
-            <Text style={styles.subtitle}>Observaciones</Text>
-            <Text style={styles.textoInfo}>{order.comments}</Text>
-          </View>
-        )}
-        <View style={styles.containerInfo}>
-          <Text style={styles.subtitle}>
-            Valor Cancelado: <Text style={styles.textoInfo}> ${order.price}</Text>
-          </Text>
-          <View style={{ justifyContent: "center", alignItems: "center" }}>
-            <Text style={styles.textimg}>Factura</Text>
-            <View style={styles.contanierimg}>
-              <Image
-                source={{
-                  uri: order.url,
-                }}
-                style={{ width: "100%", height: "100%" }}
-              />
+            <Text style={styles.subtitle}>
+              Valor Cancelado:{" "}
+              <Text style={styles.textoInfo}> ${order.price}</Text>
+            </Text>
+            <View style={{ justifyContent: "center", alignItems: "center" }}>
+              <Text style={styles.textimg}>Factura</Text>
+              <View style={styles.containerImg}>
+                {isPdf ? (
+                  <TouchableOpacity
+                    onPress={handleOpenPdf}
+                    style={styles.pdfContainer}
+                  >
+                    <AntDesign name="pdffile1" size={100} color="black" />
+                    <Text style={styles.pdfText}>Archivo PDF Subido</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Image
+                    source={{ uri: order.url }}
+                    style={{ width: "100%", height: "100%" }}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                  />
+                )}
+              </View>
             </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -228,6 +256,15 @@ const styles = StyleSheet.create({
     marginHorizontal: "auto",
     width: "80%",
     height: 188,
+  },
+  pdfContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pdfText: {
+    fontSize: 12,
+    color: "black",
+    marginTop: 5,
   },
   subtitle: {
     fontFamily: "Inter",
@@ -359,6 +396,7 @@ const styles = StyleSheet.create({
     color: "#004270",
     fontWeight: 400,
     paddingHorizontal: 10,
+    marginTop: 20,
   },
 
   contanierimg: {

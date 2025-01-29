@@ -138,6 +138,7 @@ export const VerMantenimientoCompletadoScreen = () => {
             tipo: vehicle.TIPO,
             tipo_vehicle: vehicle.TIPO_VEHICULO,
             propiedad: vehicle.PROPIEDAD,
+            image: vehicle.IMAGE_URL,
           };
           return map;
         },
@@ -169,6 +170,8 @@ export const VerMantenimientoCompletadoScreen = () => {
           "Tipo Vehiculo desconocida",
         vehiclePropiedad:
           vehicleMap[order.vehicle]?.propiedad || "Propiedad desconocida",
+        vehicleImage:
+          vehicleMap[order.vehicle]?.image || "Propiedad desconocida",
       }));
 
       if (user?.role === "mandated") {
@@ -179,7 +182,6 @@ export const VerMantenimientoCompletadoScreen = () => {
 
       setPendingOrders(orders);
       setLoading(false);
-      console.log(orders);
     } catch (error) {
       console.error("Error al obtener órdenes:", error);
       setLoading(false);
@@ -240,13 +242,13 @@ export const VerMantenimientoCompletadoScreen = () => {
               </Text>
 
               <Text style={styles.label}>
-                Tipo Mantenimiento:{" "}
-                <Text style={styles.value}>
-                  Reparación en Sistema de frenos
-                </Text>
+                Taller: <Text style={styles.value}>{item.repairshopName}</Text>
               </Text>
               <Text style={styles.label}>
                 Vehículo: <Text style={styles.value}>{item.vehicle}</Text>
+              </Text>
+              <Text style={styles.label}>
+                Encargado: <Text style={styles.value}>{item.mandatedName}</Text>{" "}
               </Text>
               <Text style={styles.label}>
                 Valor Cancelado: <Text style={styles.value}>${item.price}</Text>{" "}
@@ -294,7 +296,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    height: 160,
+    height: 175,
   },
   title: {
     fontSize: 18,

@@ -46,6 +46,8 @@ export const RegistrarTallerScreen = () => {
   const [contact, setContact] = useState("");
   const [ruc, setRuc] = useState("");
   const [imagen, setimagen] = useState("");
+  const [rucError, setRucError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   const handleMechanicChange = (value: boolean) => {
     setMechanic(value);
@@ -191,7 +193,6 @@ export const RegistrarTallerScreen = () => {
         image: imageURL,
       };
 
-      console.log("Datos del formulario:", formData);
       // Envía los datos al servidor
       const response = await fetch(
         "https://us-central1-global-tine-447000-u6.cloudfunctions.net/repairshops/api/register_repairshop",
@@ -230,20 +231,40 @@ export const RegistrarTallerScreen = () => {
     setimagen("");
   };
 
+  const validateRuc = (text: string) => {
+    if (!/^\d{13}$/.test(text)) {
+      setRucError("El RUC debe contener 13 dígitos numéricos");
+    } else {
+      setRucError("");
+    }
+    setRuc(text);
+  };
+
+  const validatePhone = (text: string) => {
+    if (!/^\d{7,10}$/.test(text)) {
+      setPhoneError(
+        "Ingrese un número válido (celular: 10 dígitos, convencional: 7-9 dígitos)"
+      );
+    } else {
+      setPhoneError("");
+    }
+    setPhone(text);
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={globalStyles(top).container}>
+        <View style={styles.containerTitle}>
+          <SimpleLineIcons
+            name="arrow-left"
+            size={19}
+            color="#004270"
+            style={styles.iconStyle}
+            onPress={() => navigation.navigate("HomeTab", { screen: "Home" })}
+          />
+          <Text style={styles.title}>Registro de Taller</Text>
+        </View>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.containerTitle}>
-            <SimpleLineIcons
-              name="arrow-left"
-              size={19}
-              color="#004270"
-              style={styles.iconStyle}
-              onPress={() => navigation.navigate("HomeTab", { screen: "Home" })}
-            />
-            <Text style={styles.title}>Registro de Taller</Text>
-          </View>
           <View style={{ justifyContent: "center", alignItems: "center" }}>
             <Text style={styles.textimg}>Agregar imagen</Text>
             <View style={styles.contanierimg}>
@@ -269,6 +290,18 @@ export const RegistrarTallerScreen = () => {
           <View style={styles.formContainer}>
             {/* Form Inputs */}
             <View style={styles.inputRowModelo}>
+              <Text style={styles.label}>Ruc:</Text>
+              <TextInput
+                style={[styles.input, rucError ? styles.inputError : null]}
+                placeholder="Ingrese Ruc"
+                value={ruc}
+                onChangeText={validateRuc}
+                keyboardType="numeric"
+                maxLength={13}
+              />
+            </View>
+            {rucError ? <Text style={styles.errorText}>{rucError}</Text> : null}
+            <View style={styles.inputRowModelo}>
               <Text style={styles.label}>Nombre:</Text>
               <TextInput
                 style={styles.inputModelo}
@@ -287,31 +320,25 @@ export const RegistrarTallerScreen = () => {
                 onChangeText={setAddress}
               />
             </View>
-            <View style={styles.inputRow}>
+            <View style={styles.inputRowModelo}>
               <Text style={styles.label}>Teléfono:</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, phoneError ? styles.inputError : null]}
                 placeholder="Ingrese teléfono"
                 value={phone}
-                onChangeText={setPhone}
+                onChangeText={validatePhone}
+                keyboardType="numeric"
+                maxLength={10}      
               />
             </View>
-            <View style={styles.inputRow}>
+            {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
+            <View style={styles.inputRowModelo}>
               <Text style={styles.label}>Contacto:</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Ingrese Nombre del Contacto"
                 value={contact}
                 onChangeText={setContact}
-              />
-            </View>
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>Ruc:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ingrese Ruc"
-                value={ruc}
-                onChangeText={setRuc}
               />
             </View>
           </View>
@@ -352,8 +379,8 @@ export const RegistrarTallerScreen = () => {
           ref={sheetRef}
           snapPoints={snapPoints}
           enablePanDownToClose={true}
-          onClose={closeSheet} // Cambia el estado a cerrado
-          onChange={handleSheetChange} // Cambia `isOpen` según el índice actual
+          onClose={closeSheet}
+          onChange={handleSheetChange}
         >
           <BottomSheetView>
             <View
@@ -376,7 +403,7 @@ export const RegistrarTallerScreen = () => {
                 onPress={() => changeImage()}
               >
                 <MaterialIcons name="photo-library" size={20} color="#2A2A2A" />
-                <Text style={styles.buttonShetText}>Subir Archivo</Text>
+                <Text style={styles.buttonShetText}>Subir de Galeria</Text>
               </TouchableOpacity>
             </View>
           </BottomSheetView>
@@ -616,5 +643,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 10,
     color: "#6A6A6A",
+  },
+  inputError: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    height: 40,
+    width: "100%",
+    borderRadius: 5,
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 8,
+    marginLeft: 10,
   },
 });

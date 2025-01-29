@@ -20,6 +20,7 @@ import {
   useNavigation,
 } from "@react-navigation/native";
 import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
+import { useUser } from "../../components/userAut/userContext";
 
 interface Vehicle {
   ACTIVIDAD_UBICACION: string;
@@ -48,6 +49,26 @@ export const MisVehiculosLivianosScreen = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([]);
+  const { user } = useUser();
+
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch(
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_orders"
+      );
+      const orders = await response.json();
+      const excludedPlates = orders
+        .filter(
+          (order: any) =>
+            order.state === "En Taller" || order.state === "Pendiente"
+        )
+        .map((order: any) => order.vehicle);
+      return new Set(excludedPlates);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      return new Set();
+    }
+  };
 
   const fetchLightVehicles = async () => {
     try {
@@ -55,8 +76,21 @@ export const MisVehiculosLivianosScreen = () => {
         "https://us-central1-global-tine-447000-u6.cloudfunctions.net/vehicles/api/get_light_vehicles"
       );
       const data: Vehicle[] = await response.json();
-      setVehicles(data);
-      setFilteredVehicles(data);
+
+      const excludedPlates = await fetchOrders();
+
+      let availableVehicles = data.filter(
+        (vehicle) => !excludedPlates.has(vehicle.PLACA)
+      );
+
+      if (user?.role === "mandated") {
+        availableVehicles = availableVehicles.filter(
+          (vehicle) => vehicle.RESPONSABLE === user.uid
+        );
+      }
+
+      setVehicles(availableVehicles);
+      setFilteredVehicles(availableVehicles);
     } catch (error) {
       console.error("Error fetching light vehicles:", error);
     } finally {
@@ -209,17 +243,18 @@ export const MisVehiculosLivianosScreen = () => {
           </View>
         )}
       />
-
-      <View style={styles.containerAgregar}>
-        <TouchableOpacity
-          style={styles.agregar}
-          onPress={() =>
-            navigation.navigate("HomeTab", { screen: "RegistrarVehiculo" })
-          }
-        >
-          <Text style={styles.textAgregar}>+ Agregar Vehiculo</Text>
-        </TouchableOpacity>
-      </View>
+      {user?.role !== "mandated" && (
+        <View style={styles.containerAgregar}>
+          <TouchableOpacity
+            style={styles.agregar}
+            onPress={() =>
+              navigation.navigate("HomeTab", { screen: "RegistrarVehiculo" })
+            }
+          >
+            <Text style={styles.textAgregar}>+ Agregar Vehiculo</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };

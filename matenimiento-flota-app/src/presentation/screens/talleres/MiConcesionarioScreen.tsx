@@ -152,7 +152,7 @@ export const MiConsecionarioScreen = () => {
 
       <Text
         style={styles.subtitle}
-      >{`${filteredRepairshops.length} Mecanicas disponibles`}</Text>
+      >{`${filteredRepairshops.length} Concesionarios disponibles`}</Text>
 
       <FlatList
         data={filteredRepairshops}

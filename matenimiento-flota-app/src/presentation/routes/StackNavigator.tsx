@@ -16,7 +16,6 @@ const Stack = createStackNavigator<RootStackParams>();
 
 export const StackNavigator = () => {
   const { user } = useUser();  
-  console.log(user)
   return (
     <Stack.Navigator
     initialRouteName={user ? "HomeStack" : "LoginScreen"}

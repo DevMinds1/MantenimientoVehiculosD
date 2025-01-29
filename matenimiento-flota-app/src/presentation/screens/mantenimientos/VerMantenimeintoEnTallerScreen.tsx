@@ -86,7 +86,6 @@ export const VerMantenimientoEnTaller = () => {
         },
         {}
       );
-      console.log("Mandated Map:", mandatedData);
 
       const vehicleMap: Record<string, any> = vehicleData.reduce(
         (map, vehicle) => {
@@ -96,19 +95,16 @@ export const VerMantenimientoEnTaller = () => {
             tipo: vehicle.TIPO,
             tipo_vehicle: vehicle.TIPO_VEHICULO,
             propiedad: vehicle.PROPIEDAD,
+            image: vehicle.IMAGE_URL,
           };
           return map;
         },
         {}
       );
 
-      console.log("Vehicle Map:", vehicleMap);
       let orders = pendingData.map((order: any) => ({
         ...order,
-        // Asegúrate de incluir el entry_date una sola vez
         entry_date: order.entry_date ? new Date(order.entry_date) : null,
-
-        // Aquí se agregan los nuevos campos del segundo fragmento
         repairshopName:
           repairshopMap[order.repairshop]?.name || "Taller desconocido",
         repairshopAddress:
@@ -125,6 +121,8 @@ export const VerMantenimientoEnTaller = () => {
           "Tipo Vehiculo desconocida",
         vehiclePropiedad:
           vehicleMap[order.vehicle]?.propiedad || "Propiedad desconocida",
+        vehicleImage:
+          vehicleMap[order.vehicle]?.image || "Propiedad desconocida",
       }));
 
       if (user?.role === "mandated") {
@@ -135,7 +133,6 @@ export const VerMantenimientoEnTaller = () => {
 
       setPendingOrders(orders);
       setLoading(false);
-      console.log(orders);
     } catch (error) {
       console.error("Error al obtener órdenes:", error);
       setLoading(false);
@@ -190,13 +187,13 @@ export const VerMantenimientoEnTaller = () => {
               </Text>
               <Text style={styles.label}>Fecha Entrega: </Text>
               <Text style={styles.label}>
-                Tipo Mantenimiento:{" "}
-                <Text style={styles.value}>
-                  Reparación en Sistema de frenos
-                </Text>
+                Taller: <Text style={styles.value}>{item.repairshopName}</Text>
               </Text>
               <Text style={styles.label}>
                 Vehículo: <Text style={styles.value}>{item.vehicle}</Text>
+              </Text>
+              <Text style={styles.label}>
+                Encargado: <Text style={styles.value}>{item.mandatedName}</Text>{" "}
               </Text>
               <Text style={styles.label}>Valor Cancelado: </Text>
               <View style={styles.buttonCont}>

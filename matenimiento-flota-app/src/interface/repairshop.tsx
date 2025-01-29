@@ -23,6 +23,7 @@ export interface Order {
   vehicleTipo: string;
   vehicleTipoVehi: string;
   vehiclePropiedad: string;
+  vehicleImage: string;
   mandatedName: string;
   mandatedEmail: string;
   entry_date: Date;
@@ -30,5 +31,7 @@ export interface Order {
   price: string;
   url: string;
 }
+
+
 
 

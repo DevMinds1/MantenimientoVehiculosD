@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Button,
   TextInput,
-  Image,
 } from "react-native";
 import Checkbox from "expo-checkbox";
 import { globalStyles } from "../../theme/theme";
@@ -24,6 +23,7 @@ import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { RootButtonParams } from "../../routes/ButtonTabsNavigator";
 import Calender from "../../components/calender/calender";
+import { Image } from "expo-image";
 
 interface Vehiculo {
   ACTIVIDAD_UBICACION: string;
@@ -42,7 +42,7 @@ interface Vehiculo {
   TIPO: string;
   TIPO_VEHICULO: string;
   id: string;
-  // IMAGE_URL: string;
+  IMAGE_URL: string;
 }
 
 interface Taller {
@@ -191,7 +191,9 @@ export const MantenimientoPreventivoScreen = () => {
         fetch(
           "https://us-central1-global-tine-447000-u6.cloudfunctions.net/users/api/get_mandated_users"
         ),
-        fetch("https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_pending_orders"),
+        fetch(
+          "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/get_pending_orders"
+        ),
       ]);
 
       const vehiculosLivianos = await responseLivianos.json();
@@ -406,10 +408,13 @@ export const MantenimientoPreventivoScreen = () => {
                         <View style={styles.containerImg}>
                           <Image
                             source={{
-                              uri: "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/Hilux00-removebg-preview%201.png?raw=true",
+                              uri:
+                                item.IMAGE_URL && item.IMAGE_URL !== ""
+                                  ? item.IMAGE_URL
+                                  : "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/Hilux00-removebg-preview%201.png?raw=true",
                             }}
-                            resizeMode="contain"
                             style={{ width: "100%", height: "100%" }}
+                            cachePolicy="memory-disk"
                           />
                         </View>
                         <View style={styles.containerInfo}>
@@ -576,16 +581,15 @@ export const MantenimientoPreventivoScreen = () => {
             <View style={styles.tabs}>
               <View style={{ width: "100%", alignItems: "center" }}>
                 <Text style={styles.activeTab}>Fallas</Text>
-                {tabTaller === "Mecánica" && (
-                  <View
-                    style={{
-                      height: 4,
-                      backgroundColor: "#FEBE10",
-                      marginVertical: 2,
-                      width: "30%",
-                    }}
-                  ></View>
-                )}
+
+                <View
+                  style={{
+                    height: 4,
+                    backgroundColor: "#FEBE10",
+                    marginVertical: 2,
+                    width: "30%",
+                  }}
+                ></View>
               </View>
             </View>
             <View
@@ -821,7 +825,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   selectedCard: {
-    backgroundColor: "#F7F7F7",
+    backgroundColor: "#EAEAEA",
     borderColor: "#1890ff",
   },
   checkboxContainer: {

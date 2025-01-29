@@ -4,7 +4,6 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Image,
   TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -27,6 +26,7 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "../../../../firebaseConfig";
 import * as DocumentPicker from "expo-document-picker";
 import { Order } from "../../../interface/repairshop";
+import { Image } from "expo-image";
 
 export const DetalleMantenimeintoScreen = () => {
   const { top } = useSafeAreaInsets();
@@ -37,6 +37,7 @@ export const DetalleMantenimeintoScreen = () => {
     state: string;
     order: Order;
   };
+  console.log(order)
 
   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
   const [precio, setPrecio] = useState("");
@@ -296,15 +297,19 @@ export const DetalleMantenimeintoScreen = () => {
             style={styles.iconStyle}
             onPress={() => navigation.navigate("Mantenimientos")}
           />
-          <Text style={styles.title}>Detalle Mantenimiento en Taller</Text>
+          <Text style={styles.title}>Detalle Mantenimiento </Text>
         </View>
 
         <View style={styles.containerImg}>
           <Image
             source={{
-              uri: "https://fotos.perfil.com/2022/11/12/como-es-la-nueva-pick-up-china-que-llegara-al-pais-1452313.jpg",
+              uri:
+                order.vehicleImage && order.vehicleImage !== ""
+                  ? order.vehicleImage
+                  : "https://fotos.perfil.com/2022/11/12/como-es-la-nueva-pick-up-china-que-llegara-al-pais-1452313.jpg",
             }}
             style={{ width: "100%", height: "100%" }}
+            cachePolicy="memory-disk"
           />
         </View>
 

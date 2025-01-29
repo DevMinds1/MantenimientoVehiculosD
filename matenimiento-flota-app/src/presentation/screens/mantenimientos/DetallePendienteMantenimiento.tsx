@@ -9,9 +9,7 @@ import {
   Text,
   View,
   StyleSheet,
-  TouchableOpacity,
-  Image,
-  TextInput,
+  TouchableOpacity, 
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { globalStyles } from "../../theme/theme";
@@ -34,12 +32,13 @@ import { storage } from "../../../../firebaseConfig";
 import * as DocumentPicker from "expo-document-picker";
 import { Order } from "../../../interface/repairshop";
 import { useUser } from "../../components/userAut/userContext";
+import { Image } from "expo-image";
 
 export const DetallePendienteMantenimeintoScreen = () => {
   const { top } = useSafeAreaInsets();
   const route = useRoute();
-    const { user } = useUser();
-  const { id, faults, state , order} = route.params as {
+  const { user } = useUser();
+  const { id, faults, state, order } = route.params as {
     id: string;
     faults: string[];
     state: string;
@@ -131,26 +130,34 @@ export const DetallePendienteMantenimeintoScreen = () => {
             style={styles.iconStyle}
             onPress={() => navigation.navigate("Mantenimientos")}
           />
-          <Text style={styles.title}>Detalle Pendiente</Text>
+          <Text style={styles.title}>Detalle Mantenimiento</Text>
         </View>
 
         <View style={styles.containerImg}>
           <Image
             source={{
-              uri: "https://fotos.perfil.com/2022/11/12/como-es-la-nueva-pick-up-china-que-llegara-al-pais-1452313.jpg",
+              uri:
+                order.vehicleImage && order.vehicleImage !== ""
+                  ? order.vehicleImage
+                  : "https://fotos.perfil.com/2022/11/12/como-es-la-nueva-pick-up-china-que-llegara-al-pais-1452313.jpg",
             }}
             style={{ width: "100%", height: "100%" }}
+            cachePolicy="memory-disk"
           />
         </View>
 
         <View style={styles.containerInfo}>
           <Text style={styles.subtitle}>Vehículo</Text>
           <Text style={styles.textoInfo}>
-             {order.vehicleMarca} ({order.vehicle})
+            {order.vehicleMarca} ({order.vehicle})
           </Text>
-          <Text style={styles.textoInfo}>Motor:  {order.vehicleMotor}</Text>
-          <Text style={styles.textoInfo}>Tipo: {order.vehicleTipo} ({order.vehicleTipoVehi}) </Text>
-          <Text style={styles.textoInfo}>Propiedad: {order.vehiclePropiedad}</Text>
+          <Text style={styles.textoInfo}>Motor: {order.vehicleMotor}</Text>
+          <Text style={styles.textoInfo}>
+            Tipo: {order.vehicleTipo} ({order.vehicleTipoVehi}){" "}
+          </Text>
+          <Text style={styles.textoInfo}>
+            Propiedad: {order.vehiclePropiedad}
+          </Text>
           <Text style={styles.subtitle}>Encargado</Text>
           <Text style={styles.textoInfo}>Nombre: {order.mandatedName}</Text>
           <Text style={styles.textoInfo}>Email: {order.mandatedEmail}</Text>
@@ -207,24 +214,24 @@ export const DetallePendienteMantenimeintoScreen = () => {
           </View>
         </View>
         {order.type == "Correctivo" && (
-        <View style={styles.containerInfo}>
-          <Text style={styles.subtitle}>Observaciones</Text>
-          <Text style={styles.textoInfo}>{order.comments}</Text>
-        </View>
+          <View style={styles.containerInfo}>
+            <Text style={styles.subtitle}>Observaciones</Text>
+            <Text style={styles.textoInfo}>{order.comments}</Text>
+          </View>
         )}
         {user?.role == "mandated" && (
-        <View style={styles.sectionBottom}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => handleButtonPress("VehiculoEnTaller")}
-          >
-            <Text style={styles.textbutton}>Vehiculo En Taller</Text>
-          </TouchableOpacity>
+          <View style={styles.sectionBottom}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleButtonPress("VehiculoEnTaller")}
+            >
+              <Text style={styles.textbutton}>Vehiculo En Taller</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button2}>
-            <Text style={styles.textbutton}>Mantenimiento Correcto</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.button2}>
+              <Text style={styles.textbutton}>Mantenimiento Correcto</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     </ScrollView>

@@ -86,7 +86,6 @@ export const VerMantenimientoPendienteScreen = () => {
         },
         {}
       );
-      console.log("Mandated Map:", mandatedData);
 
       const vehicleMap: Record<string, any> = vehicleData.reduce(
         (map, vehicle) => {
@@ -96,13 +95,12 @@ export const VerMantenimientoPendienteScreen = () => {
             tipo: vehicle.TIPO,
             tipo_vehicle: vehicle.TIPO_VEHICULO,
             propiedad: vehicle.PROPIEDAD,
+            image : vehicle.IMAGE_URL
           };
           return map;
         },
         {}
       );
-
-      console.log("Vehicle Map:", vehicleMap);
 
       let orders = pendingData.map((order: any) => ({
         ...order,
@@ -122,6 +120,8 @@ export const VerMantenimientoPendienteScreen = () => {
           "Tipo Vehiculo desconocida",
         vehiclePropiedad:
           vehicleMap[order.vehicle]?.propiedad || "Propiedad desconocida",
+        vehicleImage:
+          vehicleMap[order.vehicle]?.image || "Propiedad desconocida",
         entry_date: order.entry_date ? new Date(order.entry_date) : null,
       }));
 
@@ -133,7 +133,6 @@ export const VerMantenimientoPendienteScreen = () => {
 
       setPendingOrders(orders);
       setLoading(false);
-      console.log(orders);
     } catch (error) {
       console.error("Error al obtener órdenes:", error);
       setLoading(false);

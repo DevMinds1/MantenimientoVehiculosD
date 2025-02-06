@@ -6,6 +6,7 @@ import {
   useWindowDimensions,
   TextInput,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import {
   GestureHandlerRootView,
@@ -92,67 +93,90 @@ export const LoginScreen = ({ navigation }: Props) => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.container}>
-        <ScrollView style={styles.login} showsVerticalScrollIndicator={false}>
-          <View style={{ paddingTop: height * 0.28 }}>
-            <Text style={styles.title}>Login</Text>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View
+            style={{
+              paddingTop: height * 0.13,
+              backgroundColor: "#004270",
+              width: "100%",
+              borderRadius: 20,
+              marginBottom: 40,
+            }}
+          >
+            <Text style={styles.title}>Bienvenido a</Text>
+            <View>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require("../../images/imagenlogin.png")}
+                  style={styles.image}
+                />
+              </View>
+            </View>
             <View style={styles.containerTitle}>
               <Text style={styles.subtitle}>UTPL</Text>
               <AntDesign
                 name="car"
-                size={32}
+                size={35}
                 color="#FEBE10"
                 style={styles.iconStyle}
               />
             </View>
           </View>
 
-          <View style={{ marginTop: 10 }}>
-            <Text style={styles.rememberText}>Correo</Text>
-            <TextInput
-              placeholder="JhonDoe@dominio.com"
-              style={[styles.input, isError.email && styles.inputError]}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-            />
-            {isError.email && (
-              <Text style={styles.errorText}>{error.email}</Text>
-            )}
+          <View style={styles.login}>
+            <Text style={styles.subtitle2}>Inicio de sesión</Text>
+            <View style={{ marginTop: 10 }}>
+              <Text style={styles.rememberText}>Correo Institucional</Text>
+              <View style={styles.borde}>
+                <TextInput
+                  placeholder="JhonDoe@dominio.com"
+                  style={[styles.input, isError.email && styles.inputError]}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                />
+                {isError.email && (
+                  <Text style={styles.errorText}>{error.email}</Text>
+                )}
+              </View>
 
-            <Text style={styles.rememberText}>Contraseña</Text>
-            <TextInput
-              placeholder="*****"
-              style={[styles.input, isError.password && styles.inputError]}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={true}
-            />
-            {isError.password && (
-              <Text style={styles.errorText}>{error.password}</Text>
-            )}
-          </View>
-
-          <View style={styles.rememberContainer}>
-            <View style={styles.checkboxContainer}>
-              <Checkbox
-                value={isRemembered}
-                onValueChange={setIsRemembered}
-                style={styles.checkbox}
-              />
-              <Text style={styles.rememberText}>Recuérdame</Text>
+              <Text style={styles.rememberText}>Contraseña</Text>
+              <View style={styles.borde}>
+                <TextInput
+                  placeholder="*****"
+                  style={[styles.input, isError.password && styles.inputError]}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={true}
+                />
+                {isError.password && (
+                  <Text style={styles.errorText}>{error.password}</Text>
+                )}
+              </View>
             </View>
 
-            <TouchableOpacity style={styles.forgotPasswordContainer}>
-              <Text style={styles.forgotPasswordText}>
-                ¿Olvidaste tu contraseña?
-              </Text>
-            </TouchableOpacity>
-          </View>
+            <View style={styles.rememberContainer}>
+{/*               <View style={styles.checkboxContainer}>
+                <Checkbox
+                  value={isRemembered}
+                  onValueChange={setIsRemembered}
+                  style={styles.checkbox}
+                />
+                <Text style={styles.rememberText}>Recuérdame</Text>
+              </View> */}
 
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-              <Text style={styles.buttonText}>Iniciar Sesión</Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.forgotPasswordContainer}>
+                <Text style={styles.forgotPasswordText}>
+                  Recupera tu contraseña
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                <Text style={styles.buttonText}>Iniciar Sesión</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -166,19 +190,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   title: {
-    fontSize: 32,
+    fontSize: 15,
     textAlign: "center",
-    color: "#004270",
-    fontWeight: 700,
+    color: "#ffff",
+    fontWeight: 400,
     padding: 2,
-    fontFamily: "Inter",
+    fontFamily: "Roboto",
   },
   subtitle: {
-    fontSize: 50,
+    fontSize: 40,
     textAlign: "center",
-    color: "#004270",
+    color: "#FFFFFF",
     fontWeight: 700,
     paddingHorizontal: 10,
+    paddingBottom: 10,
   },
   login: {
     marginHorizontal: 40,
@@ -186,7 +211,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "#EDF1F3",
-    marginBottom: 10,
+
     paddingHorizontal: 10,
     height: 40,
     borderRadius: 5,
@@ -195,22 +220,23 @@ const styles = StyleSheet.create({
   },
 
   buttonContainer: {
-    marginTop: 20,
+    marginTop: 40,
     alignItems: "center",
   },
   button: {
     backgroundColor: "#004270",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
     borderRadius: 20,
     alignItems: "center",
+    justifyContent: 'center',
     width: "100%",
-    height: 48,
+    height: 61,
   },
   buttonText: {
     color: "white",
-    fontSize: 14,
-    fontWeight: 500,
+    fontSize: 16,
+    fontWeight: 700,
     fontFamily: "Inter",
   },
 
@@ -224,7 +250,7 @@ const styles = StyleSheet.create({
 
   rememberContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
     marginTop: 10,
   },
@@ -236,20 +262,22 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   rememberText: {
-    fontSize: 12,
-    fontFamily: "Inter",
-    fontWeight: 500,
-    color: "#6C7278",
+    fontSize: 14,
+    fontFamily: "Roboto",
+    fontWeight: 400,
+    color: "#000000B2",
   },
   forgotPasswordContainer: {
     justifyContent: "flex-end",
   },
   forgotPasswordText: {
-    fontSize: 12,
-    color: "#4D81E7",
-    fontWeight: 600,
-    fontFamily: "Inter",
+    fontSize: 13,
+    color: "#034872",
+    fontWeight: 400,
+    fontFamily: "Roboto",
     marginLeft: 10,
+    textDecorationLine: 'underline'
+  
   },
 
   containerTitle: {
@@ -268,5 +296,25 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     fontSize: 12,
+  },
+  logoContainer: {
+    alignItems: "center",
+  },
+  image: {
+    width: 195,
+    height: 132,
+  },
+  subtitle2: {
+    fontFamily: "Roboto",
+    fontWeight: 500,
+    fontSize: 30,
+    color: "#004270",
+    textAlign: "center",
+    marginBottom: 15,
+  },
+  borde: {
+    borderBottomColor: "#E9B40A",
+    borderBottomWidth: 1,
+    marginBottom: 15,
   },
 });

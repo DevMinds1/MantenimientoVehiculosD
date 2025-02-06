@@ -30,6 +30,7 @@ export interface Order {
   delivery_date: Date;
   price: string;
   url: string;
+  vehicleKilometraje: string;
 }
 
 

@@ -37,11 +37,13 @@ export const DetalleMantenimeintoScreen = () => {
     state: string;
     order: Order;
   };
-  console.log(order)
+  console.log(order);
 
   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
   const [precio, setPrecio] = useState("");
+  const [kilometrajeNuevo, setkilometrajeNuevo] = useState("");
   const [fallasSeleccionadas, setFallasSeleccionadas] = useState<string[]>([]);
+  const [kilometrajeError, setKilometrajeError] = useState("");
   const [tabTaller, setTabTaller] = useState<"Mecánica" | "Concesionario">(
     "Mecánica"
   );
@@ -95,6 +97,7 @@ export const DetalleMantenimeintoScreen = () => {
       setFallasSeleccionadas([]);
       setimagen("");
       setPrecio("");
+      setkilometrajeNuevo("");
       setShowFallas(false);
       updateOrderCompleted();
       alert("Oreden Completada exitosamente");
@@ -242,14 +245,16 @@ export const DetalleMantenimeintoScreen = () => {
 
   const updateOrderCompleted = async () => {
     try {
-      if (!imagen || !precio) {
-        alert("Por favor, suba una imagen y proporcione un precio.");
+      if (!imagen || !precio || !kilometrajeNuevo) {
+        alert(
+          "Por favor, suba una imagen, proporcione un precio y el kilometraje."
+        );
         return;
       }
 
       const imageURL = await uploadImageToFirebase(imagen);
 
-      const response = await fetch(
+      const orderResponse = await fetch(
         "https://us-central1-global-tine-447000-u6.cloudfunctions.net/orders/api/update_order_completed",
         {
           method: "PUT",
@@ -265,29 +270,72 @@ export const DetalleMantenimeintoScreen = () => {
         }
       );
 
-      const result = await response.json();
-      if (response.ok) {
-      } else {
-        alert(`Error: ${result.error}`);
+      const orderResult = await orderResponse.json();
+      if (!orderResponse.ok) {
+        alert(`Error actualizando la orden: ${orderResult.error}`);
+        return;
       }
+
+      const placa = order.vehicle;
+      const vehicleResponse = await fetch(
+        "https://us-central1-global-tine-447000-u6.cloudfunctions.net/vehicles/api/update_vehicle",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            placa: placa,
+            kilometraje: kilometrajeNuevo,
+          }),
+        }
+      );
+
+      const vehicleResult = await vehicleResponse.json();
+      if (!vehicleResponse.ok) {
+        alert(`Error actualizando el kilometraje: ${vehicleResult.error}`);
+        return;
+      }
+
+      navigation.navigate("Mantenimientos", { screen: "Completados" });
     } catch (error) {
-      console.error("Error actualizando la orden:", error);
-      alert("Hubo un problema al actualizar la orden.");
+      console.error("Error en la actualización:", error);
+      alert("Hubo un problema al actualizar la orden o el kilometraje.");
     }
   };
 
   const handlePrecioChange = (text: string) => {
-    // Expresión regular para validar valores monetarios (números enteros o decimales con hasta dos decimales)
     const regex = /^\d+(\.\d{0,2})?$/;
-
-    // Verificar si el texto coincide con el patrón o si está vacío
     if (regex.test(text) || text === "") {
-      setPrecio(text); // Actualiza el valor del precio
+      setPrecio(text);
     }
   };
 
+  const validateKilometraje = (text: string) => {
+    const regex = /^[0-9]+(,[0-9]+)?$/;
+    const newKilometraje = parseFloat(text.replace(',', '.'));
+  
+    // Verificar si el formato del texto es correcto
+    if (!regex.test(text)) {
+      setKilometrajeError("El kilometraje debe ser un número válido");
+    } 
+    // Verificar si el nuevo kilometraje es menor al anterior
+    else if (newKilometraje < parseFloat(order.vehicleKilometraje)) {
+      setKilometrajeError("El kilometraje no puede ser menor al registrado anteriormente");
+    } 
+    else {
+      setKilometrajeError("");  // Si pasa todas las validaciones, borrar el error
+    }
+    
+    setkilometrajeNuevo(text);  // Actualizar el estado con el nuevo texto ingresado
+  };
+  
+
   return (
-    <ScrollView style={{ backgroundColor: "#fff" }}>
+    <ScrollView
+      style={{ backgroundColor: "#fff" }}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={globalStyles(top).container}>
         <View style={styles.containerTitle}>
           <SimpleLineIcons
@@ -299,7 +347,6 @@ export const DetalleMantenimeintoScreen = () => {
           />
           <Text style={styles.title}>Detalle Mantenimiento </Text>
         </View>
-
         <View style={styles.containerImg}>
           <Image
             source={{
@@ -322,6 +369,7 @@ export const DetalleMantenimeintoScreen = () => {
           <Text style={styles.textoInfo}>
             Tipo: {order.vehicleTipo} ({order.vehicleTipoVehi}){" "}
           </Text>
+          <Text style={styles.textoInfo}>Kilometraje: {order.vehicleKilometraje}</Text>
           <Text style={styles.textoInfo}>
             Propiedad: {order.vehiclePropiedad}
           </Text>
@@ -386,16 +434,36 @@ export const DetalleMantenimeintoScreen = () => {
           )}
         </View>
         <View>
-          <View style={styles.inputRow}>
-            <Text style={styles.label}>Valor a cancelar:</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ingrese el valor a cancelar"
-              value={precio}
-              onChangeText={handlePrecioChange}
-              keyboardType="numeric"
-            />
+          <View style={styles.containerInfo}>
+            <View style={styles.inputRow}>
+              <Text style={styles.label}>Actualizar Kilometraje:</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  kilometrajeError ? styles.inputError : null,
+                ]}
+                placeholder="Ingrese el Kilometraje del vehículo"
+                value={kilometrajeNuevo}
+                onChangeText={validateKilometraje}
+                keyboardType="numeric"
+              />
+            </View>
+            {kilometrajeError ? (
+              <Text style={styles.errorText}>{kilometrajeError}</Text>
+            ) : null}
+
+            <View style={styles.inputRow}>
+              <Text style={styles.label}>Valor a cancelar:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ingrese el valor a cancelar"
+                value={precio}
+                onChangeText={handlePrecioChange}
+                keyboardType="numeric"
+              />
+            </View>
           </View>
+
           <View style={{ justifyContent: "center", alignItems: "center" }}>
             <Text style={styles.textimg}>Subir Factura</Text>
             <View style={styles.contanierimg}>
@@ -537,7 +605,7 @@ const styles = StyleSheet.create({
   containerInfo: {
     marginVertical: 5,
 
-    width: "70%",
+    width: "90%",
     marginHorizontal: "auto",
   },
   textoInfo: {
@@ -751,5 +819,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 10,
     color: "#6A6A6A",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 8,
+    marginLeft: 10,
+  },
+  inputError: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    height: 40,
+    width: "100%",
+    borderRadius: 5,
+    borderColor: "red",
   },
 });

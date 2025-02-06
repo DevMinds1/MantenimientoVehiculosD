@@ -13,6 +13,7 @@ import { ProgressBar } from "react-native-paper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useUser } from "../../components/userAut/userContext";
 import { RootStackParams } from "../../routes/StackNavigator";
+import MyChart from "../../components/grafico/graficoLineas";
 
 export const HomeScreen = () => {
   const { user, logout } = useUser();
@@ -32,7 +33,7 @@ export const HomeScreen = () => {
 
   return (
     <View style={globalStyles(top).container}>
-      <View style = {styles.containerMenus}>
+      <View style={styles.containerMenus}>
         <Pressable
           onPress={() => navigation.dispatch(DrawerActions.toggleDrawer)}
         >
@@ -87,7 +88,12 @@ export const HomeScreen = () => {
         {/* Resumen Mensual */}
         <Text style={styles.sectionTitle}>Resumen mensual</Text>
         <View style={styles.monthlySummary}>
-          <View style={styles.circle}></View>
+          <View style={styles.circle}>
+            <Image
+              source={require("../../images/imagenestad.png")}
+              style={styles.image}
+            />
+          </View>
           <View>
             <View style={styles.containerTextMonthly}>
               <View style={styles.circleres1}></View>
@@ -103,12 +109,13 @@ export const HomeScreen = () => {
         {/* Resumen Anual */}
         <Text style={styles.sectionTitle}>Resumen anual</Text>
         <View style={styles.containerAnual}>
-          <Image
+          <MyChart></MyChart>
+          {/*     <Image
             source={{
               uri: "https://github.com/JonathanCoronel/uploadimg/blob/main/Imagenes%20Arquitectura/Group%20782.png?raw=true",
             }}
             style={{ width: "100%", height: "100%" }}
-          />
+          /> */}
         </View>
       </View>
     </View>
@@ -171,7 +178,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 100,
-    backgroundColor: "#F2B705",
+
     marginRight: 15,
   },
   circleres1: {
@@ -210,8 +217,12 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 250,
   },
-  containerMenus:{
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  }
+  containerMenus: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
 });

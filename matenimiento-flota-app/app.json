@@ -21,7 +21,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.jhonathancoronel.matenimientoflotaapp"
+      "package": "com.jhonathancoronel.matenimientoflotaapp",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -51,6 +55,7 @@
       "eas": {
         "projectId": "c182e2eb-3538-46a7-b791-fd8925025d70"
       }
-    }
+    },
+    "owner": "devminds"
   }
 }

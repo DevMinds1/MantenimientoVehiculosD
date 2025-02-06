@@ -122,6 +122,7 @@ export const CompletadoMantenimeinto = () => {
             <Text style={styles.textoInfo}>
               Tipo: {order.vehicleTipo} ({order.vehicleTipoVehi}){" "}
             </Text>
+             <Text style={styles.textoInfo}>Kilometraje: {order.vehicleKilometraje}</Text>
             <Text style={styles.textoInfo}>
               Propiedad: {order.vehiclePropiedad}
             </Text>
@@ -167,10 +168,10 @@ export const CompletadoMantenimeinto = () => {
                         width: 20,
                         height: 20,
                         borderWidth: 2,
-                        borderColor: "#F2B705", // Borde amarillo
+                        borderColor: "#F2B705", 
                         backgroundColor: fallasSeleccionadas.includes(item.id)
                           ? "#F2B705"
-                          : "#EEE", // Fondo amarillo si seleccionado, gris si no
+                          : "#EEE",
                         alignItems: "center",
                         justifyContent: "center",
                       }}

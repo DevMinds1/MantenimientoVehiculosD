@@ -138,7 +138,8 @@ export const VerMantenimientoCompletadoScreen = () => {
             tipo: vehicle.TIPO,
             tipo_vehicle: vehicle.TIPO_VEHICULO,
             propiedad: vehicle.PROPIEDAD,
-            image: vehicle.IMAGE_URL,
+            kilometraje: vehicle.KILOMETRAJE,
+            image: vehicle.IMAGE_URL || ""
           };
           return map;
         },
@@ -170,8 +171,10 @@ export const VerMantenimientoCompletadoScreen = () => {
           "Tipo Vehiculo desconocida",
         vehiclePropiedad:
           vehicleMap[order.vehicle]?.propiedad || "Propiedad desconocida",
+          vehicleKilometraje:
+          vehicleMap[order.vehicle]?.kilometraje || "Propiedad desconocida",
         vehicleImage:
-          vehicleMap[order.vehicle]?.image || "Propiedad desconocida",
+        vehicleMap[order.vehicle]?.image || null,
       }));
 
       if (user?.role === "mandated") {
@@ -190,9 +193,22 @@ export const VerMantenimientoCompletadoScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchPendingOrders();
+      const fetchAndSortOrders = async () => {
+        await fetchPendingOrders();
+        setPendingOrders((orders) =>
+          [...orders].sort((a, b) => {
+            if (!a.delivery_date) return 1;
+            if (!b.delivery_date) return -1;
+            return new Date(b.delivery_date).getTime() - new Date(a.delivery_date).getTime();
+          })
+        );
+      };
+      fetchAndSortOrders();
     }, [])
   );
+  
+  
+
 
   const formatDate = (date: Date | null): string => {
     if (!date) return "Fecha no disponible";

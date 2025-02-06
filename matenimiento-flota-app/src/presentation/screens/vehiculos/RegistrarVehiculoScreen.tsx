@@ -41,6 +41,7 @@ interface Encargado {
 type FormData = {
   actividadUbicacion: string;
   anio: string;
+  kilometraje: string;
   chasis: string;
   color: string;
   combustible: string;
@@ -84,8 +85,11 @@ export const RegistrarVehiculoScreen = () => {
   const [tipo, setTipo] = useState("");
   const [tipoVehiculo, setTipoVehiculo] = useState("");
   const [imagen, setimagen] = useState("");
+  const [kilometraje, setkilometraje] = useState("");
   const [anioError, setAnioError] = useState("");
   const [numError, setNumError] = useState("");
+  const [placaError, setPlacaError] = useState("");
+  const [kilometrajeError, setKilometrajeError] = useState("");
 
   const sheetRef = useRef<BottomSheet>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -238,6 +242,7 @@ export const RegistrarVehiculoScreen = () => {
     if (
       !actividadUbicacion ||
       !anio ||
+      !kilometraje ||
       !chasis ||
       !color ||
       !combustible ||
@@ -265,6 +270,7 @@ export const RegistrarVehiculoScreen = () => {
       const formData: FormData = {
         actividadUbicacion,
         anio,
+        kilometraje,
         chasis,
         color,
         combustible,
@@ -347,6 +353,32 @@ export const RegistrarVehiculoScreen = () => {
     setNum(text);
   };
 
+  const validatePlaca = (text: string) => {
+    let formattedText = text.toUpperCase().replace(/[^A-Z0-9]/g, ""); // Solo permite letras y números
+
+    if (formattedText.length > 3) {
+      formattedText = formattedText.slice(0, 3) + "-" + formattedText.slice(3);
+    }
+
+    if (!/^[A-Z]{3}-\d{0,4}$/.test(formattedText)) {
+      setPlacaError("Formato inválido. Use LLL-NNNN (Ejemplo: LBD-4180)");
+    } else {
+      setPlacaError("");
+    }
+    setPlaca(formattedText);
+  };
+
+  // Validación de kilometraje
+  const validateKilometraje = (text: string) => {
+    const regex = /^[0-9]+(,[0-9]+)?$/; // Permite enteros y decimales con coma
+    if (!regex.test(text)) {
+      setKilometrajeError("El kilometraje debe ser un número válido");
+    } else {
+      setKilometrajeError("");
+    }
+    setkilometraje(text);
+  };
+
   return (
     <GestureHandlerRootView style={globalStyles(top).container}>
       <View style={styles.containerTitle}>
@@ -387,15 +419,21 @@ export const RegistrarVehiculoScreen = () => {
 
         <View style={styles.formContainer}>
           {/* Form Inputs */}
+          {/* Input de Placa */}
           <View style={styles.inputRow}>
             <Text style={styles.label}>Placa:</Text>
             <TextInput
-              style={styles.input}
-              placeholder="Ingrese la placa del vehículo"
+              style={[styles.input, placaError ? styles.inputError : null]}
+              placeholder="Ingrese la Placa del Vehículo"
               value={placa}
-              onChangeText={setPlaca}
+              onChangeText={validatePlaca}
+              autoCapitalize="characters"
+              maxLength={8}
             />
           </View>
+          {placaError ? (
+            <Text style={styles.errorText}>{placaError}</Text>
+          ) : null}
           <View style={styles.inputRow}>
             <Text style={styles.label}>Actividad o Ubicación:</Text>
             <TextInput
@@ -417,6 +455,22 @@ export const RegistrarVehiculoScreen = () => {
             />
           </View>
           {anioError ? <Text style={styles.errorText}>{anioError}</Text> : null}
+          <View style={styles.inputRow}>
+            <Text style={styles.label}>Kilometraje:</Text>
+            <TextInput
+              style={[
+                styles.input,
+                kilometrajeError ? styles.inputError : null,
+              ]}
+              placeholder="Ingrese el Kilometraje del vehículo"
+              value={kilometraje}
+              onChangeText={validateKilometraje}
+              keyboardType="numeric"
+            />
+          </View>
+          {kilometrajeError ? (
+            <Text style={styles.errorText}>{kilometrajeError}</Text>
+          ) : null}
           <View style={styles.inputRow}>
             <Text style={styles.label}>Chasis:</Text>
             <TextInput
@@ -483,7 +537,7 @@ export const RegistrarVehiculoScreen = () => {
           <View style={styles.inputRow}>
             <Text style={styles.label}>Número:</Text>
             <TextInput
-             style={[styles.input, numError ? styles.inputError : null]}
+              style={[styles.input, numError ? styles.inputError : null]}
               placeholder="Ingrese el número del vehículo"
               value={num}
               keyboardType="numeric"
@@ -588,7 +642,6 @@ export const RegistrarVehiculoScreen = () => {
               color="#D3D3D3"
             />
             <Text style={styles.checkboxLabel}>Pesado</Text>
-            
           </View>
         </View>
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
@@ -638,7 +691,7 @@ export const RegistrarVehiculoScreen = () => {
           </BottomSheetView>
         </BottomSheet>
       )}
-      
+
       {cameraOpen && (
         <View style={styles.containerCamera}>
           <CameraView style={styles.camera} ref={cameraRef}>
@@ -880,7 +933,7 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
     marginTop: 10,
-    marginHorizontal:8
+    marginHorizontal: 8,
   },
   buscar: {
     flexDirection: "row",

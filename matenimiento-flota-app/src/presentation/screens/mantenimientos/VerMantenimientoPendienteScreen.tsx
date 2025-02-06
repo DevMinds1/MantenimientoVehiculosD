@@ -95,12 +95,14 @@ export const VerMantenimientoPendienteScreen = () => {
             tipo: vehicle.TIPO,
             tipo_vehicle: vehicle.TIPO_VEHICULO,
             propiedad: vehicle.PROPIEDAD,
-            image : vehicle.IMAGE_URL
+            kilometraje: vehicle.KILOMETRAJE,
+            image: vehicle.IMAGE_URL || ""
           };
           return map;
         },
         {}
       );
+
 
       let orders = pendingData.map((order: any) => ({
         ...order,
@@ -121,7 +123,9 @@ export const VerMantenimientoPendienteScreen = () => {
         vehiclePropiedad:
           vehicleMap[order.vehicle]?.propiedad || "Propiedad desconocida",
         vehicleImage:
-          vehicleMap[order.vehicle]?.image || "Propiedad desconocida",
+          vehicleMap[order.vehicle]?.image || null,
+          vehicleKilometraje:
+          vehicleMap[order.vehicle]?.kilometraje || "Propiedad desconocida",
         entry_date: order.entry_date ? new Date(order.entry_date) : null,
       }));
 

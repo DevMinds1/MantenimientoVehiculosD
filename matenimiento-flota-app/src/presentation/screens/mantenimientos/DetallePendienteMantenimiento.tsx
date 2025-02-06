@@ -45,6 +45,8 @@ export const DetallePendienteMantenimeintoScreen = () => {
     order: Order;
   };
 
+  console.log(order)
+
   const navigation = useNavigation<NavigationProp<RootButtonParams>>();
   const [precio, setPrecio] = useState("");
   const [fallasSeleccionadas, setFallasSeleccionadas] = useState<string[]>([]);
@@ -155,6 +157,7 @@ export const DetallePendienteMantenimeintoScreen = () => {
           <Text style={styles.textoInfo}>
             Tipo: {order.vehicleTipo} ({order.vehicleTipoVehi}){" "}
           </Text>
+          <Text style={styles.textoInfo}>Kilometraje: {order.vehicleKilometraje}</Text>
           <Text style={styles.textoInfo}>
             Propiedad: {order.vehiclePropiedad}
           </Text>

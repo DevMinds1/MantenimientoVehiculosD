@@ -95,7 +95,8 @@ export const VerMantenimientoEnTaller = () => {
             tipo: vehicle.TIPO,
             tipo_vehicle: vehicle.TIPO_VEHICULO,
             propiedad: vehicle.PROPIEDAD,
-            image: vehicle.IMAGE_URL,
+            kilometraje: vehicle.KILOMETRAJE,
+            image: vehicle.IMAGE_URL || ""
           };
           return map;
         },
@@ -121,8 +122,10 @@ export const VerMantenimientoEnTaller = () => {
           "Tipo Vehiculo desconocida",
         vehiclePropiedad:
           vehicleMap[order.vehicle]?.propiedad || "Propiedad desconocida",
+          vehicleKilometraje:
+          vehicleMap[order.vehicle]?.kilometraje || "Propiedad desconocida",
         vehicleImage:
-          vehicleMap[order.vehicle]?.image || "Propiedad desconocida",
+        vehicleMap[order.vehicle]?.image || null,
       }));
 
       if (user?.role === "mandated") {
@@ -166,7 +169,7 @@ export const VerMantenimientoEnTaller = () => {
             // Primero coloca los que tienen el estado "En Taller"
             if (a.state === "En Taller" && b.state !== "En Taller") return -1;
             if (a.state !== "En Taller" && b.state === "En Taller") return 1;
-            return 0; // Si ambos son iguales, no se cambia el orden
+            return (b.entry_date?.getTime() || 0) - (a.entry_date?.getTime() || 0);
           })}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
@@ -211,7 +214,7 @@ export const VerMantenimientoEnTaller = () => {
                     })
                   }
                 >
-                  <Text style={styles.statusText}>Aceptado</Text>
+                  <Text style={styles.statusText}>Ver</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -256,7 +259,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    height: 200,
+    height: 210,
   },
   title: {
     fontSize: 18,
@@ -278,7 +281,7 @@ const styles = StyleSheet.create({
     color: "#000000",
   },
   statusButton: {
-    marginTop: 10,
+    marginTop: 5,
     backgroundColor: "#004270",
     alignSelf: "flex-start",
     paddingVertical: 1,

@@ -13,6 +13,7 @@ def register_vehicle():
         data = request.get_json()
         actividadUbicacion = data.get('actividadUbicacion')
         anio = data.get('anio')
+        kilometraje = data.get('kilometraje')
         chasis = data.get('chasis')
         color = data.get('color')
         combustible = data.get('combustible')
@@ -32,6 +33,7 @@ def register_vehicle():
         new_vehicle = {
             'ACTIVIDAD_UBICACION': actividadUbicacion,
             'ANIO': anio,
+            'KILOMETRAJE': kilometraje,
             'CHASIS': chasis,
             'COLOR': color,
             'COMBUSTIBLE': combustible,
@@ -107,6 +109,32 @@ def get_heavy_vehicles():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/update_vehicle', methods=['PUT'])
+def update_vehicle():
+    try:
+        data = request.get_json()
+        placa = data.get('placa')
+        kilometraje = data.get('kilometraje')
+
+        if not placa or kilometraje is None:
+            return jsonify({'error': 'Faltan parámetros (placa o kilometraje)'}), 400
+
+        vehicles_ref = db.collection('vehiculos').where('PLACA', '==', placa)
+        vehicle_docs = list(vehicles_ref.stream())
+
+        if not vehicle_docs:
+            return jsonify({'error': 'Vehículo no encontrado'}), 404
+
+        vehicle_doc = vehicle_docs[0] 
+        vehicle_id = vehicle_doc.id 
+
+        db.collection('vehiculos').document(vehicle_id).update({'KILOMETRAJE': kilometraje})
+
+        return jsonify({'message': 'Vehículo actualizado exitosamente'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5001)
 

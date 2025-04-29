@@ -265,10 +265,10 @@ export const MantenimientoCorrectivoScreen = () => {
     const queryLower1 = searchQueryTaller.toLowerCase();
     return (
       taller.type === tabTaller &&
-      (taller.name.toLowerCase().includes(queryLower1) ||
-        taller.address.toLowerCase().includes(queryLower1) ||
-        taller.city.toLowerCase().includes(queryLower1) ||
-        taller.phone.includes(queryLower1))
+      (taller.name?.toLowerCase().includes(queryLower1) ||
+        taller.address?.toLowerCase().includes(queryLower1) ||
+        taller.city?.toLowerCase().includes(queryLower1) ||
+        taller.phone?.includes(queryLower1))
     );
   });
 

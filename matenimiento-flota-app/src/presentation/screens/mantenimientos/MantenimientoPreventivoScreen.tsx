@@ -269,10 +269,10 @@ export const MantenimientoPreventivoScreen = () => {
     const queryLower = searchQueryVehiculo.toLowerCase();
     return (
       vehiculo.TIPO_VEHICULO === tabVehiculo &&
-      (vehiculo.PLACA ||
+      (vehiculo.PLACA.toString().toLowerCase().includes(queryLower) ||
         vehiculo.MARCA.toLowerCase().includes(queryLower) ||
         vehiculo.MODELO_ANIO.toLowerCase().includes(queryLower) ||
-        vehiculo.ANIO)
+        vehiculo.ANIO.toString().includes(queryLower))
     );
   });
 
@@ -280,10 +280,10 @@ export const MantenimientoPreventivoScreen = () => {
     const queryLower1 = searchQueryTaller.toLowerCase();
     return (
       taller.type === tabTaller &&
-      (taller.name.toLowerCase().includes(queryLower1) ||
-        taller.address.toLowerCase().includes(queryLower1) ||
-        taller.city.toLowerCase().includes(queryLower1) ||
-        taller.phone.includes(queryLower1))
+      (taller.name?.toLowerCase().includes(queryLower1) ||
+        taller.address?.toLowerCase().includes(queryLower1) ||
+        taller.city?.toLowerCase().includes(queryLower1) ||
+        taller.phone?.includes(queryLower1))
     );
   });
 
@@ -423,7 +423,7 @@ export const MantenimientoPreventivoScreen = () => {
                             numberOfLines={1}
                             ellipsizeMode="tail"
                           >
-                            {item.MODELO_ANIO}
+                            {item.MARCA}
                           </Text>
                           <Text style={styles.listItemTextPlaca}>
                             {item.PLACA}
